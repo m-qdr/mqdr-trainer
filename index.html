@@ -16,7 +16,7 @@
     <!-- Dynamic manifest will be inserted by script -->
 
     <style>
-        /* ... (same as before) ... */
+        /* ===== RESET & BASE ===== */
         * {
             margin: 0;
             padding: 0;
@@ -47,6 +47,7 @@
             position: relative;
         }
 
+        /* ===== INSTALL BUTTON ===== */
         .install-btn {
             position: fixed;
             bottom: 20px;
@@ -81,7 +82,7 @@
             display: block;
         }
 
-        /* ... (rest of existing styles) ... */
+        /* ===== HEADER ===== */
         .header {
             display: flex;
             justify-content: space-between;
@@ -164,6 +165,7 @@
             box-shadow: 0 0 12px rgba(251, 191, 36, 0.2);
         }
 
+        /* ===== TIMER ===== */
         .timer-main {
             text-align: center;
             margin: 6px 0 4px;
@@ -197,6 +199,7 @@
             margin-top: -2px;
         }
 
+        /* ===== ELRS BACKPACK ===== */
         .elrs-backpack {
             background: #0a0f16;
             border-radius: 20px;
@@ -293,6 +296,7 @@
             font-family: 'Courier New', monospace;
         }
 
+        /* ===== LAPS GRID ===== */
         .laps-grid {
             display: flex;
             justify-content: space-around;
@@ -333,6 +337,7 @@
             margin-top: 2px;
         }
 
+        /* ===== CIRCLE BUTTON ===== */
         .circle-btn-wrap {
             display: flex;
             justify-content: center;
@@ -386,6 +391,7 @@
             box-shadow: 0 0 30px rgba(251, 191, 36, 0.3);
         }
 
+        /* ===== CONTROLS ===== */
         .controls {
             display: flex;
             gap: 10px;
@@ -464,6 +470,7 @@
             background: #1a2f4a;
         }
 
+        /* ===== SETTINGS ROW ===== */
         .settings-row {
             display: flex;
             align-items: center;
@@ -539,6 +546,7 @@
             color: #b0d0f0;
         }
 
+        /* ===== LAP LIST ===== */
         .lap-list {
             margin-top: 16px;
             max-height: 160px;
@@ -592,6 +600,7 @@
             font-size: 14px;
         }
 
+        /* ===== DEBUG ===== */
         .debug-info {
             font-size: 11px;
             color: #5f7a9a;
@@ -603,6 +612,7 @@
             border: 1px solid #1d2836;
         }
 
+        /* ===== RESPONSIVE ===== */
         @media (max-width: 440px) {
             .app {
                 padding: 14px 12px 20px;
@@ -717,6 +727,7 @@
             <div class="status" id="statusLabel">● СТОП</div>
         </div>
 
+        <!-- ELRS Backpack Display -->
         <div class="elrs-backpack" id="elrsBackpack">
             <div class="elrs-header" id="elrsHeader">
                 <span class="elrs-info" id="elrsInfo">Ожидание</span>
@@ -822,7 +833,7 @@
 
     <script>
         // ============================================================
-        //  PWA MANIFEST GENERATION
+        //  PWA MANIFEST GENERATION (with updated logo)
         // ============================================================
         (function generateManifest() {
             const manifest = {
@@ -833,11 +844,11 @@
                 background_color: "#0e1118",
                 theme_color: "#0df3f0",
                 icons: [{
-                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%230e1118'/%3E%3Ctext x='96' y='124' font-size='70' text-anchor='middle' fill='%230df3f0' font-family='sans-serif'%3EFP%3C/text%3E%3C/svg%3E",
+                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%230e1118'/%3E%3Ctext x='96' y='82' font-size='34' text-anchor='middle' fill='%230df3f0' font-family='sans-serif' font-weight='bold'%3EMQDR%3C/text%3E%3Ctext x='96' y='122' font-size='30' text-anchor='middle' fill='%230df3f0' font-family='sans-serif' font-weight='bold'%3ELAPS%3C/text%3E%3C/svg%3E",
                     sizes: "192x192",
                     type: "image/svg+xml"
                 }, {
-                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230e1118'/%3E%3Ctext x='256' y='332' font-size='180' text-anchor='middle' fill='%230df3f0' font-family='sans-serif'%3EFP%3C/text%3E%3C/svg%3E",
+                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230e1118'/%3E%3Ctext x='256' y='220' font-size='90' text-anchor='middle' fill='%230df3f0' font-family='sans-serif' font-weight='bold'%3EMQDR%3C/text%3E%3Ctext x='256' y='320' font-size='80' text-anchor='middle' fill='%230df3f0' font-family='sans-serif' font-weight='bold'%3ELAPS%3C/text%3E%3C/svg%3E",
                     sizes: "512x512",
                     type: "image/svg+xml",
                     purpose: "any maskable"
@@ -860,10 +871,8 @@
             const installBtn = document.getElementById('installBtn');
             let deferredPrompt = null;
 
-            // Скрываем кнопку по умолчанию
             installBtn.classList.remove('show');
 
-            // Перехватываем событие beforeinstallprompt
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredPrompt = e;
@@ -871,10 +880,8 @@
                 console.log('PWA install prompt available');
             });
 
-            // Обработчик клика по кнопке установки
             installBtn.addEventListener('click', async () => {
                 if (deferredPrompt) {
-                    // Показываем диалог установки
                     deferredPrompt.prompt();
                     const result = await deferredPrompt.userChoice;
                     console.log('User choice:', result.outcome);
@@ -883,21 +890,17 @@
                     }
                     deferredPrompt = null;
                 } else {
-                    // Если по какой-то причине deferredPrompt нет, можно предложить инструкцию
                     alert('Установка доступна через меню браузера: "Добавить на экран "Домой""');
                 }
             });
 
-            // Если приложение уже установлено, скрываем кнопку
             window.addEventListener('appinstalled', () => {
                 installBtn.classList.remove('show');
                 console.log('App installed');
             });
 
-            // Для iOS (не поддерживает beforeinstallprompt) — показываем кнопку с инструкцией
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             if (isIOS) {
-                // На iOS кнопка будет показывать инструкцию
                 installBtn.classList.add('show');
                 installBtn.textContent = '📲 Добавить на экран "Домой"';
                 installBtn.addEventListener('click', () => {
@@ -905,24 +908,17 @@
                 });
             }
 
-            // Для других браузеров, где нет beforeinstallprompt, но PWA поддерживается
-            // Проверяем, доступен ли navigator.getInstalledRelatedApps (необязательно)
-            // Если кнопка не появилась через beforeinstallprompt через 5 секунд, показываем её как подсказку
             setTimeout(() => {
                 if (!installBtn.classList.contains('show') && !isIOS) {
-                    // Проверим, не установлено ли уже приложение
-                    // Для простоты просто покажем кнопку с альтернативным действием
                     installBtn.classList.add('show');
                     installBtn.textContent = '📲 Установить приложение';
-                    // Но не будем менять обработчик, т.к. deferredPrompt может появиться позже
-                    // (в некоторых браузерах событие приходит после загрузки)
                 }
             }, 5000);
 
         })();
 
         // ============================================================
-        //  MAIN APPLICATION LOGIC (same as before)
+        //  MAIN APPLICATION LOGIC (unchanged)
         // ============================================================
         (function mainApp() {
             'use strict';
