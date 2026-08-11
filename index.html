@@ -13,8 +13,6 @@
     <meta name="theme-color" content="#0e1118" />
     <meta name="background-color" content="#0e1118" />
 
-    <!-- Dynamic manifest will be inserted by script -->
-
     <style>
         /* ===== RESET & BASE ===== */
         * {
@@ -539,6 +537,13 @@
             border-color: #3fe8b0;
         }
 
+        .settings-row input[type="checkbox"] {
+            accent-color: #3fe8b0;
+            width: 18px;
+            height: 18px;
+            cursor: pointer;
+        }
+
         .settings-row .volume-value {
             min-width: 40px;
             text-align: center;
@@ -821,6 +826,14 @@
             </label>
         </div>
 
+        <!-- Голосовые подсказки -->
+        <div class="settings-row">
+            <label>
+                🗣️ Голосовые подсказки
+                <input type="checkbox" id="voiceSwitch" checked />
+            </label>
+        </div>
+
         <div class="debug-info" id="debugInfo">Пульт не обнаружен. Нажмите «Сканировать» или любую кнопку на пульте.</div>
 
         <div class="lap-list" id="lapList">
@@ -833,7 +846,7 @@
 
     <script>
         // ============================================================
-        //  PWA MANIFEST GENERATION (with updated logo)
+        //  PWA MANIFEST GENERATION
         // ============================================================
         (function generateManifest() {
             const manifest = {
@@ -918,7 +931,7 @@
         })();
 
         // ============================================================
-        //  MAIN APPLICATION LOGIC (unchanged)
+        //  MAIN APPLICATION LOGIC
         // ============================================================
         (function mainApp() {
             'use strict';
@@ -946,6 +959,7 @@
             const volumeSlider = document.getElementById('volumeSlider');
             const volumeValue = document.getElementById('volumeValue');
             const bestLapsInput = document.getElementById('bestLapsCount');
+            const voiceSwitch = document.getElementById('voiceSwitch');
 
             // ELRS elements
             const elrsLed = document.getElementById('elrsLed');
@@ -985,11 +999,54 @@
             // Количество лучших кругов для среднего
             let bestLapsCount = 3;
 
+            // Голосовые подсказки
+            let voiceEnabled = true;
+
             // Countdown duration (seconds)
             const COUNTDOWN_DEFAULT = 5;
             const COUNTDOWN_GP = 3;
 
-            // Load display format
+            // ===== VOICE =====
+            function loadVoiceSetting() {
+                const saved = localStorage.getItem('mqdr_voice_enabled');
+                if (saved !== null) {
+                    voiceEnabled = saved === 'true';
+                    voiceSwitch.checked = voiceEnabled;
+                } else {
+                    voiceEnabled = true;
+                    voiceSwitch.checked = true;
+                }
+            }
+
+            function saveVoiceSetting() {
+                localStorage.setItem('mqdr_voice_enabled', voiceEnabled);
+            }
+
+            voiceSwitch.addEventListener('change', function() {
+                voiceEnabled = this.checked;
+                saveVoiceSetting();
+            });
+
+            function speak(text) {
+                if (!voiceEnabled) return;
+                if (!window.speechSynthesis) return;
+                // Отменяем предыдущую речь, чтобы избежать наложения
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.lang = 'ru-RU';
+                utterance.rate = 0.9;
+                utterance.pitch = 1;
+                // Попробуем найти русский голос
+                const voices = window.speechSynthesis.getVoices();
+                const ruVoice = voices.find(v => v.lang.startsWith('ru'));
+                if (ruVoice) utterance.voice = ruVoice;
+                window.speechSynthesis.speak(utterance);
+            }
+
+            // Загружаем настройки
+            loadVoiceSetting();
+
+            // ===== DISPLAY FORMAT =====
             function loadDisplayFormat() {
                 const saved = localStorage.getItem('mqdr_display_format');
                 if (saved !== null) {
@@ -1013,7 +1070,7 @@
                 updateELRS();
             });
 
-            // Load best laps count
+            // ===== BEST LAPS COUNT =====
             function loadBestLapsCount() {
                 const saved = localStorage.getItem('mqdr_best_laps_count');
                 if (saved !== null) {
@@ -1049,7 +1106,7 @@
                 }
             });
 
-            // Audio
+            // ===== AUDIO =====
             let audioCtx = null;
 
             function getAudioContext() {
@@ -1086,7 +1143,7 @@
                 setTimeout(() => beepShort(), 300);
             }
 
-            // Volume control
+            // ===== VOLUME =====
             function loadVolume() {
                 const saved = localStorage.getItem('mqdr_volume');
                 if (saved !== null) {
@@ -1111,7 +1168,7 @@
             }
             volumeSlider.addEventListener('input', saveVolume);
 
-            // Load settings (button, volume, bestLaps)
+            // ===== LOAD SETTINGS =====
             function loadSettings() {
                 const saved = localStorage.getItem('laps_trainer_radiomaster');
                 if (saved) {
@@ -1126,6 +1183,7 @@
                 loadVolume();
                 loadDisplayFormat();
                 loadBestLapsCount();
+                loadVoiceSetting();
             }
 
             function saveSettings() {
@@ -1142,7 +1200,7 @@
                 saveSettings();
             });
 
-            // Format time
+            // ===== FORMAT TIME =====
             function formatTime(ms) {
                 if (ms < 0) ms = 0;
                 const totalSec = Math.floor(ms / 1000);
@@ -1152,7 +1210,7 @@
                 return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
             }
 
-            // Update ELRS Backpack
+            // ===== UPDATE ELRS =====
             function updateELRS() {
                 const count = laps.length;
                 const totalTimeStr = formatTime(totalElapsed);
@@ -1223,7 +1281,7 @@
                 }
             }
 
-            // Update all displays
+            // ===== UPDATE DISPLAYS =====
             function updateDisplays() {
                 totalTimeEl.textContent = formatTime(totalElapsed);
                 lapCountEl.textContent = laps.length;
@@ -1273,7 +1331,7 @@
                 stopBtn.disabled = !isRunning && !isCountdown;
             }
 
-            // Список кругов
+            // ===== RENDER LAP LIST =====
             function renderLapList() {
                 if (laps.length === 0) {
                     lapListEl.innerHTML = '<div class="empty-laps">Нет кругов</div>';
@@ -1294,7 +1352,7 @@
                 lapListEl.scrollTop = 0;
             }
 
-            // Timer loop
+            // ===== TIMER LOOP =====
             function tick(timestamp) {
                 if (!isRunning) {
                     if (animFrame) {
@@ -1311,7 +1369,7 @@
                 animFrame = requestAnimationFrame(tick);
             }
 
-            // Start racing
+            // ===== START RACING =====
             function startRacing() {
                 isRunning = true;
                 isCountdown = false;
@@ -1329,9 +1387,10 @@
                 if (navigator.vibrate) navigator.vibrate(30);
                 updateRadioStatus();
                 debugInfo.textContent = '🏁 Гонка началась!';
+                speak('Поехали!');
             }
 
-            // Countdown with specified duration
+            // ===== COUNTDOWN =====
             function startCountdown(duration) {
                 if (isRunning || isCountdown) return;
                 if (countdownInterval) {
@@ -1350,6 +1409,9 @@
                 totalTimeEl.className = 'time countdown';
                 totalTimeEl.textContent = countdownSeconds;
 
+                // Озвучиваем "Старт через Х"
+                speak(`Старт через ${duration}`);
+
                 countdownInterval = setInterval(() => {
                     countdownSeconds--;
                     if (countdownSeconds > 0) {
@@ -1357,6 +1419,10 @@
                         totalTimeEl.textContent = countdownSeconds;
                         updateDisplays();
                         if (navigator.vibrate) navigator.vibrate(20);
+                        // Озвучиваем цифры только если громкость > 0 (кратко)
+                        if (voiceEnabled && countdownSeconds <= 3) {
+                            speak(countdownSeconds.toString());
+                        }
                     } else if (countdownSeconds === 0) {
                         beepLong();
                         totalTimeEl.textContent = 'GO!';
@@ -1376,7 +1442,7 @@
                 debugInfo.textContent = `⏳ Обратный отсчёт ${duration} с...`;
             }
 
-            // Stop
+            // ===== STOP =====
             function stopTimer() {
                 if (isCountdown) {
                     if (countdownInterval) {
@@ -1395,6 +1461,7 @@
                     if (navigator.vibrate) navigator.vibrate(30);
                     startBtn.disabled = false;
                     stopBtn.disabled = true;
+                    speak('Отсчёт прерван');
                     return;
                 }
 
@@ -1410,9 +1477,10 @@
                 debugInfo.textContent = '⏹ Гонка остановлена';
                 startBtn.disabled = false;
                 stopBtn.disabled = true;
+                speak('Гонка остановлена');
             }
 
-            // Stop with triple beep
+            // ===== STOP WITH TRIPLE BEEP =====
             function stopWithTripleBeep() {
                 if (!isRunning) {
                     debugInfo.textContent = 'Гонка не активна, удержание игнорируется';
@@ -1425,7 +1493,7 @@
                 }, 400);
             }
 
-            // Reset
+            // ===== RESET =====
             function resetAll() {
                 if (isCountdown) {
                     if (countdownInterval) {
@@ -1459,9 +1527,12 @@
                 pressActive = false;
                 pressSource = null;
                 updateELRS();
+                speak('Сброс');
             }
 
-            // Record lap
+            // ===== RECORD LAP =====
+            let wasBest = false; // флаг для озвучки нового лучшего
+
             function recordLap() {
                 if (!isRunning) {
                     debugInfo.textContent = '⚠️ Гонка не активна. Нажмите «Старт».';
@@ -1478,16 +1549,29 @@
                     return;
                 }
 
+                // Проверяем, был ли предыдущий лучший
+                const prevBest = laps.length > 0 ? Math.min(...laps) : Infinity;
+                const isNewBest = lapTime < prevBest;
+
                 laps.push(lapTime);
                 lapStartTime = nowTime;
                 updateDisplays();
                 if (navigator.vibrate) navigator.vibrate(50);
                 debugInfo.textContent = `✅ Круг #${laps.length} зафиксирован (${formatTime(lapTime)})`;
                 beepShort();
+
+                // Озвучиваем круг
+                speak(`Круг ${laps.length}, время ${formatTime(lapTime)}`);
+
+                // Если новый лучший — озвучиваем
+                if (isNewBest) {
+                    speak('Новый лучший круг!');
+                }
+
                 updateRadioStatus();
             }
 
-            // Press handlers
+            // ===== PRESS HANDLERS =====
             function onPressStart(source) {
                 if (isCountdown) {
                     debugInfo.textContent = '⏳ Подождите старта!';
@@ -1550,7 +1634,7 @@
                 }
             }
 
-            // Gamepad handling
+            // ===== GAMEPAD =====
             function updateRadioStatus() {
                 const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
                 let connected = false;
@@ -1597,7 +1681,7 @@
                 if (navigator.vibrate) navigator.vibrate(20);
             }
 
-            // Poll gamepad
+            // ===== POLL GAMEPAD =====
             function pollGamepad() {
                 updateRadioStatus();
                 const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
@@ -1633,7 +1717,7 @@
                 requestAnimationFrame(pollGamepad);
             }
 
-            // Setup screen button
+            // ===== SETUP SCREEN BUTTON =====
             function setupScreenButton() {
                 const btn = document.getElementById('lapBtn');
                 btn.addEventListener('mousedown', (e) => {
@@ -1661,7 +1745,7 @@
                 }, { passive: false });
             }
 
-            // Init
+            // ===== INIT =====
             function init() {
                 resetAll();
                 setupScreenButton();
@@ -1676,9 +1760,13 @@
                     updateRadioStatus();
                     debugInfo.textContent = '🔌 Пульт отключён';
                 });
+                // Preload voices
+                if (window.speechSynthesis) {
+                    window.speechSynthesis.getVoices();
+                }
             }
 
-            // Event listeners for control buttons
+            // ===== EVENT LISTENERS =====
             startBtn.addEventListener('click', function() {
                 if (!isRunning && !isCountdown) {
                     startCountdown(COUNTDOWN_DEFAULT);
@@ -1743,7 +1831,10 @@
                 setBestLapsCount: (n) => { if (n >= 1 && n <= 10) { bestLapsCount = n;
                         bestLapsInput.value = n;
                         saveBestLapsCount();
-                        updateELRS(); } }
+                        updateELRS(); } },
+                setVoice: (enabled) => { voiceEnabled = enabled;
+                    voiceSwitch.checked = enabled;
+                    saveVoiceSetting(); }
             };
 
         })();
