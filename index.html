@@ -3,8 +3,21 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-    <title>MQDR Trainer — ELRS Backpack</title>
+    <title>MQDR Trainer</title>
+
+    <!-- PWA Meta Tags -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="MQDR Trainer" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="theme-color" content="#0e1118" />
+    <meta name="background-color" content="#0e1118" />
+
+    <!-- Manifest (inline as data URI) -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1RRFIgVHJhaW5lciIsCiAgInNob3J0X25hbWUiOiAiTVFEUiBUcmFpbmVyIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwZTExMTgiLAogICJjYXRlZ29yeSI6ICJzcG9ydHMiLAogICJ0aGVtZV9jb2xvciI6ICIjMGRmM2YwIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLDxzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTkyIDE5Mic+PHJlY3Qgd2lkdGg9JzE5MicgaGVpZ2h0PScxOTInIGZpbGw9JyMwZTExMTgnLz48dGV4dCB4PSc5NicgeT0nMTI0JyBmb250LXNpemU9JzcwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmaWxsPScjMGRmM2YwJyBmb250LWZhbWlseT0nc2Fucy1zZXJpZic+RlA8L3RleHQ+PC9zdmc+IiwKICAgICAgInNpemVzIjogIjE5MngxOTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWwsPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA1MTIgNTEyJz48cmVjdCB3aWR0aD0nNTEyJyBoZWlnaHQ9JzUxMicgZmlsbD0nIzBlMTExOCcvPjx0ZXh0IHg9JzI1NicgeT0nMzMyJyBmb250LXNpemU9JzE4MCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nIzBkZjNmMCcgZm9udC1mYW1pbHk9J3NhbnMtc2VyaWYnPkZQPC90ZXh0Pjwvc3ZnPiIsCiAgICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIsCiAgICAgICJwdXJwb3NlIjogImFueSBtYXNrYWJsZSIKICAgIH0KICBdCn0=" />
+
     <style>
+        /* ... existing styles ... */
         * {
             margin: 0;
             padding: 0;
@@ -648,6 +661,7 @@
 </head>
 <body>
     <div class="app" id="app">
+        <!-- ... content ... -->
         <div class="header">
             <div class="header-left">
                 <h1>🏁 MQDR Trainer</h1>
@@ -659,7 +673,6 @@
             <div class="status" id="statusLabel">● СТОП</div>
         </div>
 
-        <!-- ELRS Backpack Display -->
         <div class="elrs-backpack" id="elrsBackpack">
             <div class="elrs-header" id="elrsHeader">
                 <span class="elrs-info" id="elrsInfo">Ожидание</span>
@@ -761,6 +774,7 @@
     </div>
 
     <script>
+        // ... existing JavaScript (unchanged) ...
         (function() {
             'use strict';
 
@@ -993,7 +1007,7 @@
                 return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
             }
 
-            // Update ELRS Backpack (среднее за X лучших кругов)
+            // Update ELRS Backpack
             function updateELRS() {
                 const count = laps.length;
                 const totalTimeStr = formatTime(totalElapsed);
@@ -1040,7 +1054,6 @@
                 elrsLapNum.textContent = `#${count}`;
                 elrsLapTime.textContent = formatTime(last);
 
-                // Вычисляем среднее за X лучших кругов
                 const sorted = [...laps].sort((a, b) => a - b);
                 const take = Math.min(bestLapsCount, sorted.length);
                 const bestLaps = sorted.slice(0, take);
@@ -1115,7 +1128,7 @@
                 stopBtn.disabled = !isRunning && !isCountdown;
             }
 
-            // Список кругов без дельты
+            // Список кругов
             function renderLapList() {
                 if (laps.length === 0) {
                     lapListEl.innerHTML = '<div class="empty-laps">Нет кругов</div>';
@@ -1329,8 +1342,7 @@
                 updateRadioStatus();
             }
 
-            // --- Обработка нажатий ---
-
+            // Press handlers
             function onPressStart(source) {
                 if (isCountdown) {
                     debugInfo.textContent = '⏳ Подождите старта!';
