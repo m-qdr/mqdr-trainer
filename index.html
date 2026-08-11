@@ -1,0 +1,1595 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <title>MQDR Trainer — ELRS Backpack</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: #0b0e14;
+            color: #e8edf5;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px;
+        }
+
+        .app {
+            max-width: 480px;
+            width: 100%;
+            background: #151c26;
+            border-radius: 40px;
+            padding: 20px 16px 28px;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
+            border: 1px solid #2a3545;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            flex-wrap: wrap;
+            gap: 6px 0;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+
+        .header h1 {
+            font-size: 20px;
+            font-weight: 600;
+            letter-spacing: 0.5px;
+            background: linear-gradient(135deg, #00d4ff, #7b61ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .radio-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+            background: #1e2a3a;
+            padding: 4px 14px 4px 10px;
+            border-radius: 30px;
+            border: 1px solid #2f4055;
+            color: #8fa4c0;
+            font-weight: 500;
+            white-space: nowrap;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+
+        .radio-status:hover {
+            background: #253241;
+        }
+
+        .radio-status .dot {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #5f7a9a;
+            transition: background 0.3s;
+        }
+
+        .radio-status .dot.connected {
+            background: #3fe8b0;
+            box-shadow: 0 0 8px #3fe8b0;
+        }
+
+        .status {
+            background: #1e2a3a;
+            padding: 4px 16px;
+            border-radius: 30px;
+            font-size: 13px;
+            font-weight: 500;
+            color: #8fa4c0;
+            border: 1px solid #2f4055;
+        }
+
+        .status.active {
+            color: #3fe8b0;
+            border-color: #3fe8b0;
+            box-shadow: 0 0 12px rgba(63, 232, 176, 0.2);
+        }
+
+        .status.countdown {
+            color: #fbbf24;
+            border-color: #fbbf24;
+            box-shadow: 0 0 12px rgba(251, 191, 36, 0.2);
+        }
+
+        .timer-main {
+            text-align: center;
+            margin: 6px 0 4px;
+        }
+
+        .timer-main .time {
+            font-size: 64px;
+            font-weight: 700;
+            font-variant-numeric: tabular-nums;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, #f0f6ff, #b0c8e8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+            transition: color 0.2s;
+        }
+
+        .timer-main .time.countdown {
+            background: linear-gradient(to right, #fbbf24, #f59e0b);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            font-size: 72px;
+        }
+
+        .timer-main .label {
+            font-size: 12px;
+            color: #6d85a5;
+            letter-spacing: 2px;
+            margin-top: -2px;
+        }
+
+        .elrs-backpack {
+            background: #0a0f16;
+            border-radius: 20px;
+            padding: 12px 16px;
+            margin: 8px 0 12px;
+            border: 1px solid #2a3a4a;
+            box-shadow: inset 0 0 20px rgba(0, 20, 40, 0.6);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            position: relative;
+        }
+
+        .elrs-backpack .elrs-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #5f8aaa;
+            letter-spacing: 1px;
+            text-transform: uppercase;
+            font-weight: 600;
+            border-bottom: 1px solid #1a2a3a;
+            padding-bottom: 4px;
+            cursor: pointer;
+            transition: background 0.2s;
+            border-radius: 8px;
+            padding: 4px 6px;
+            margin: -4px -6px;
+        }
+
+        .elrs-backpack .elrs-header:hover {
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .elrs-backpack .elrs-header .elrs-info {
+            flex: 1;
+            color: #8ab8d8;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .elrs-backpack .elrs-header .elrs-status {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-shrink: 0;
+            margin-left: 8px;
+        }
+
+        .elrs-backpack .elrs-header .elrs-status .led {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #3a5a6a;
+        }
+
+        .elrs-backpack .elrs-header .elrs-status .led.active {
+            background: #3fe8b0;
+            box-shadow: 0 0 10px #3fe8b0;
+        }
+
+        .elrs-data {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            padding: 4px 0;
+            color: #b8d8f0;
+        }
+
+        .elrs-data .lap-number {
+            font-size: 28px;
+            color: #a8d0ff;
+            min-width: 60px;
+        }
+
+        .elrs-data .lap-time {
+            font-size: 24px;
+            color: #b0e0ff;
+            letter-spacing: 1px;
+            text-align: right;
+            flex: 1;
+        }
+
+        .elrs-backpack .elrs-footer {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            color: #4a6a7a;
+            border-top: 1px solid #1a2a3a;
+            padding-top: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .laps-grid {
+            display: flex;
+            justify-content: space-around;
+            background: #10171f;
+            border-radius: 20px;
+            padding: 12px 6px;
+            margin: 6px 0 12px;
+            border: 1px solid #25313f;
+        }
+
+        .laps-grid .item {
+            text-align: center;
+        }
+
+        .laps-grid .item .value {
+            font-size: 26px;
+            font-weight: 600;
+            color: #dce6f2;
+        }
+
+        .laps-grid .item .value.best {
+            color: #fbbf24;
+        }
+
+        .laps-grid .item .value.last {
+            color: #60a5fa;
+        }
+
+        .laps-grid .item .value.count {
+            color: #a78bfa;
+        }
+
+        .laps-grid .item .desc {
+            font-size: 10px;
+            text-transform: uppercase;
+            color: #5f7a9a;
+            letter-spacing: 1px;
+            margin-top: 2px;
+        }
+
+        .circle-btn-wrap {
+            display: flex;
+            justify-content: center;
+            margin: 6px 0 14px;
+        }
+
+        .circle-btn {
+            width: 150px;
+            height: 150px;
+            border-radius: 50%;
+            background: linear-gradient(145deg, #1e2b3c, #0f1620);
+            border: 3px solid #2d3f55;
+            color: #e0ecff;
+            font-size: 26px;
+            font-weight: 700;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.6), inset 0 -4px 8px rgba(0, 0, 0, 0.4), inset 0 4px 8px rgba(255, 255, 255, 0.05);
+            transition: transform 0.15s, box-shadow 0.15s, border-color 0.2s;
+            touch-action: manipulation;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .circle-btn:active {
+            transform: scale(0.93);
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.7), inset 0 2px 4px rgba(0, 0, 0, 0.5);
+        }
+
+        .circle-btn .sub {
+            font-size: 13px;
+            font-weight: 400;
+            opacity: 0.6;
+            margin-top: 4px;
+        }
+
+        .circle-btn.active-btn {
+            border-color: #3fe8b0;
+            box-shadow: 0 0 30px rgba(63, 232, 176, 0.25), 0 8px 20px rgba(0, 0, 0, 0.6);
+        }
+
+        .circle-btn.stopped {
+            border-color: #f87171;
+            box-shadow: 0 0 20px rgba(248, 113, 113, 0.15);
+        }
+
+        .circle-btn.countdown-btn {
+            border-color: #fbbf24;
+            box-shadow: 0 0 30px rgba(251, 191, 36, 0.3);
+        }
+
+        .controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 6px;
+            flex-wrap: wrap;
+        }
+
+        .btn {
+            background: #1f2d3e;
+            border: none;
+            border-radius: 40px;
+            padding: 10px 18px;
+            font-size: 14px;
+            font-weight: 600;
+            color: #b6ccf0;
+            flex: 1;
+            min-width: 70px;
+            max-width: 120px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+            transition: background 0.2s, transform 0.1s, box-shadow 0.2s;
+            touch-action: manipulation;
+            cursor: pointer;
+            border: 1px solid #2e4058;
+            text-align: center;
+        }
+
+        .btn:active {
+            transform: scale(0.95);
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .btn-start {
+            background: #1c7b5a;
+            border-color: #2ea87e;
+            color: #d4f5e6;
+        }
+
+        .btn-start:active:not(:disabled) {
+            background: #146a4d;
+        }
+
+        .btn-stop {
+            background: #7a3a3a;
+            border-color: #b55a5a;
+            color: #fad4d4;
+        }
+
+        .btn-stop:active:not(:disabled) {
+            background: #662e2e;
+        }
+
+        .btn-reset {
+            background: #2a3445;
+            border-color: #40556e;
+            color: #b0c6e0;
+        }
+
+        .btn-reset:active:not(:disabled) {
+            background: #1f2836;
+        }
+
+        .btn-scan {
+            background: #1f3a5a;
+            border-color: #2f5a8a;
+            color: #b0d0f0;
+        }
+
+        .btn-scan:active:not(:disabled) {
+            background: #1a2f4a;
+        }
+
+        .settings-row {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            background: #10171f;
+            border-radius: 30px;
+            padding: 8px 16px 8px 20px;
+            margin: 12px 0 8px;
+            border: 1px solid #25313f;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .settings-row label {
+            font-size: 13px;
+            color: #8fa4c0;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .settings-row select {
+            background: #1e2a3a;
+            color: #dce6f2;
+            border: 1px solid #2f4055;
+            border-radius: 30px;
+            padding: 4px 12px 4px 16px;
+            font-size: 13px;
+            font-weight: 500;
+            outline: none;
+            cursor: pointer;
+            font-family: inherit;
+        }
+
+        .settings-row select:focus {
+            border-color: #3fe8b0;
+        }
+
+        .settings-row input[type="range"] {
+            width: 120px;
+            accent-color: #3fe8b0;
+            background: #1e2a3a;
+            height: 4px;
+            border-radius: 4px;
+            outline: none;
+            cursor: pointer;
+        }
+
+        .settings-row input[type="number"] {
+            width: 60px;
+            background: #1e2a3a;
+            color: #dce6f2;
+            border: 1px solid #2f4055;
+            border-radius: 30px;
+            padding: 4px 8px;
+            font-size: 13px;
+            font-weight: 500;
+            outline: none;
+            text-align: center;
+            font-family: inherit;
+        }
+
+        .settings-row input[type="number"]:focus {
+            border-color: #3fe8b0;
+        }
+
+        .settings-row .volume-value {
+            min-width: 40px;
+            text-align: center;
+            font-weight: 600;
+            color: #b0d0f0;
+        }
+
+        .lap-list {
+            margin-top: 16px;
+            max-height: 160px;
+            overflow-y: auto;
+            border-top: 1px solid #25313f;
+            padding-top: 12px;
+            scrollbar-width: thin;
+            scrollbar-color: #3a4d66 #151c26;
+        }
+
+        .lap-list::-webkit-scrollbar {
+            width: 4px;
+        }
+
+        .lap-list::-webkit-scrollbar-track {
+            background: #151c26;
+        }
+
+        .lap-list::-webkit-scrollbar-thumb {
+            background: #3a4d66;
+            border-radius: 8px;
+        }
+
+        .lap-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 4px;
+            border-bottom: 1px solid #1d2836;
+            font-size: 15px;
+            font-variant-numeric: tabular-nums;
+        }
+
+        .lap-item .idx {
+            color: #6d85a5;
+            width: 50px;
+        }
+
+        .lap-item .time {
+            font-weight: 500;
+            color: #dce6f2;
+        }
+
+        .lap-item.best .time {
+            color: #fbbf24;
+        }
+
+        .empty-laps {
+            text-align: center;
+            color: #3f556e;
+            padding: 16px 0;
+            font-size: 14px;
+        }
+
+        .debug-info {
+            font-size: 11px;
+            color: #5f7a9a;
+            margin-top: 8px;
+            text-align: center;
+            background: #10171f;
+            border-radius: 16px;
+            padding: 6px 12px;
+            border: 1px solid #1d2836;
+        }
+
+        @media (max-width: 440px) {
+            .app {
+                padding: 14px 12px 20px;
+                border-radius: 28px;
+            }
+            .timer-main .time {
+                font-size: 48px;
+            }
+            .timer-main .time.countdown {
+                font-size: 56px;
+            }
+            .circle-btn {
+                width: 130px;
+                height: 130px;
+                font-size: 22px;
+            }
+            .laps-grid .item .value {
+                font-size: 20px;
+            }
+            .btn {
+                padding: 8px 12px;
+                font-size: 12px;
+                max-width: 90px;
+            }
+            .lap-item {
+                font-size: 13px;
+            }
+            .settings-row {
+                padding: 6px 12px;
+            }
+            .settings-row label {
+                font-size: 12px;
+            }
+            .header h1 {
+                font-size: 18px;
+            }
+            .elrs-data .lap-number {
+                font-size: 22px;
+            }
+            .elrs-data .lap-time {
+                font-size: 20px;
+            }
+            .settings-row input[type="range"] {
+                width: 80px;
+            }
+            .elrs-backpack .elrs-header {
+                font-size: 10px;
+            }
+            .settings-row input[type="number"] {
+                width: 50px;
+                font-size: 12px;
+            }
+        }
+
+        @media (max-width: 360px) {
+            .timer-main .time {
+                font-size: 40px;
+            }
+            .timer-main .time.countdown {
+                font-size: 46px;
+            }
+            .circle-btn {
+                width: 110px;
+                height: 110px;
+                font-size: 18px;
+            }
+            .laps-grid .item .value {
+                font-size: 17px;
+            }
+            .btn {
+                font-size: 11px;
+                padding: 6px 8px;
+                max-width: 70px;
+            }
+            .elrs-data .lap-number {
+                font-size: 18px;
+                min-width: 40px;
+            }
+            .elrs-data .lap-time {
+                font-size: 16px;
+            }
+            .settings-row input[type="range"] {
+                width: 60px;
+            }
+            .settings-row input[type="number"] {
+                width: 40px;
+                font-size: 11px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app" id="app">
+        <div class="header">
+            <div class="header-left">
+                <h1>🏁 MQDR Trainer</h1>
+                <div class="radio-status" id="radioStatus" title="Нажмите для сканирования пультов">
+                    <span class="dot" id="radioDot"></span>
+                    <span id="radioLabel">Нет</span>
+                </div>
+            </div>
+            <div class="status" id="statusLabel">● СТОП</div>
+        </div>
+
+        <!-- ELRS Backpack Display -->
+        <div class="elrs-backpack" id="elrsBackpack">
+            <div class="elrs-header" id="elrsHeader">
+                <span class="elrs-info" id="elrsInfo">Ожидание</span>
+                <span class="elrs-status">
+                    <span class="led" id="elrsLed"></span>
+                    <span id="elrsStatusText">Ожидание</span>
+                </span>
+            </div>
+            <div class="elrs-data">
+                <span class="lap-number" id="elrsLapNum">--</span>
+                <span class="lap-time" id="elrsLapTime">--:--.--</span>
+            </div>
+            <div class="elrs-footer">
+                <span id="elrsBest">Лучший: --</span>
+                <span id="elrsTotal">Всего: 0</span>
+            </div>
+        </div>
+
+        <div class="timer-main">
+            <div class="time" id="totalTime">00:00.00</div>
+            <div class="label" id="timerLabel">ОБЩЕЕ ВРЕМЯ</div>
+        </div>
+
+        <div class="laps-grid">
+            <div class="item">
+                <div class="value count" id="lapCount">0</div>
+                <div class="desc">Круги</div>
+            </div>
+            <div class="item">
+                <div class="value last" id="lastLapTime">–</div>
+                <div class="desc">Последний</div>
+            </div>
+            <div class="item">
+                <div class="value best" id="bestLapTime">–</div>
+                <div class="desc">Лучший</div>
+            </div>
+        </div>
+
+        <div class="circle-btn-wrap">
+            <div class="circle-btn" id="lapBtn">
+                <span id="lapBtnLabel">КРУГ</span>
+                <span class="sub" id="lapBtnSub">нажмите</span>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button class="btn btn-start" id="startBtn">▶ Старт</button>
+            <button class="btn btn-stop" id="stopBtn" disabled>⏹ Стоп</button>
+            <button class="btn btn-reset" id="resetBtn">⟳ Сброс</button>
+            <button class="btn btn-scan" id="scanBtn">🔄 Сканировать</button>
+        </div>
+
+        <div class="settings-row">
+            <label>
+                🎮 Кнопка пульта
+                <select id="buttonSelect">
+                    <option value="any">Любая</option>
+                    <option value="0">0</option>
+                    <option value="1">1</option>
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="4">4</option>
+                    <option value="5">5</option>
+                    <option value="6">6</option>
+                    <option value="7">7</option>
+                    <option value="8">8</option>
+                    <option value="9">9</option>
+                    <option value="10">10</option>
+                    <option value="11">11</option>
+                    <option value="12">12</option>
+                    <option value="13">13</option>
+                    <option value="14">14</option>
+                    <option value="15">15</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="settings-row">
+            <label>
+                🔊 Громкость пиков
+                <input type="range" id="volumeSlider" min="0" max="100" value="70" />
+                <span class="volume-value" id="volumeValue">70%</span>
+            </label>
+        </div>
+
+        <div class="settings-row">
+            <label>
+                🏆 Среднее за
+                <input type="number" id="bestLapsCount" min="1" max="10" value="3" />
+                кругов
+            </label>
+        </div>
+
+        <div class="debug-info" id="debugInfo">Пульт не обнаружен. Нажмите «Сканировать» или любую кнопку на пульте.</div>
+
+        <div class="lap-list" id="lapList">
+            <div class="empty-laps">Нет кругов</div>
+        </div>
+    </div>
+
+    <script>
+        (function() {
+            'use strict';
+
+            // DOM refs
+            const totalTimeEl = document.getElementById('totalTime');
+            const timerLabel = document.getElementById('timerLabel');
+            const lapCountEl = document.getElementById('lapCount');
+            const lastLapTimeEl = document.getElementById('lastLapTime');
+            const bestLapTimeEl = document.getElementById('bestLapTime');
+            const lapListEl = document.getElementById('lapList');
+            const statusLabel = document.getElementById('statusLabel');
+            const lapBtn = document.getElementById('lapBtn');
+            const lapBtnLabel = document.getElementById('lapBtnLabel');
+            const lapBtnSub = document.getElementById('lapBtnSub');
+            const startBtn = document.getElementById('startBtn');
+            const stopBtn = document.getElementById('stopBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const scanBtn = document.getElementById('scanBtn');
+            const radioDot = document.getElementById('radioDot');
+            const radioLabel = document.getElementById('radioLabel');
+            const radioStatus = document.getElementById('radioStatus');
+            const buttonSelect = document.getElementById('buttonSelect');
+            const debugInfo = document.getElementById('debugInfo');
+            const volumeSlider = document.getElementById('volumeSlider');
+            const volumeValue = document.getElementById('volumeValue');
+            const bestLapsInput = document.getElementById('bestLapsCount');
+
+            // ELRS elements
+            const elrsLed = document.getElementById('elrsLed');
+            const elrsStatusText = document.getElementById('elrsStatusText');
+            const elrsLapNum = document.getElementById('elrsLapNum');
+            const elrsLapTime = document.getElementById('elrsLapTime');
+            const elrsBest = document.getElementById('elrsBest');
+            const elrsTotal = document.getElementById('elrsTotal');
+            const elrsInfo = document.getElementById('elrsInfo');
+            const elrsHeader = document.getElementById('elrsHeader');
+
+            // State
+            let isRunning = false;
+            let isCountdown = false;
+            let countdownInterval = null;
+            let countdownSeconds = 0;
+            let totalElapsed = 0;
+            let laps = [];
+            let lapStartTime = 0;
+            let animFrame = null;
+            let lastTimestamp = 0;
+
+            // Gamepad state
+            let gamepadConnected = false;
+            let selectedButton = 'any';
+            let pressStartTime = 0;
+            let pressActive = false;
+            let pressSource = null;
+            let pressTimerId = null;
+
+            // Volume (0..1)
+            let volumeMultiplier = 0.7;
+
+            // Display format: 0 = "Круги: X", 1 = "X кругов за YY:MM.MM"
+            let displayFormat = 0;
+
+            // Количество лучших кругов для среднего
+            let bestLapsCount = 3;
+
+            // Countdown duration (seconds)
+            const COUNTDOWN_DEFAULT = 5;
+            const COUNTDOWN_GP = 3;
+
+            // Load display format
+            function loadDisplayFormat() {
+                const saved = localStorage.getItem('mqdr_display_format');
+                if (saved !== null) {
+                    const val = parseInt(saved, 10);
+                    if (val === 0 || val === 1) {
+                        displayFormat = val;
+                        return;
+                    }
+                }
+                displayFormat = 0;
+            }
+            loadDisplayFormat();
+
+            function saveDisplayFormat() {
+                localStorage.setItem('mqdr_display_format', displayFormat);
+            }
+
+            elrsHeader.addEventListener('click', function(e) {
+                displayFormat = displayFormat === 0 ? 1 : 0;
+                saveDisplayFormat();
+                updateELRS();
+            });
+
+            // Load best laps count
+            function loadBestLapsCount() {
+                const saved = localStorage.getItem('mqdr_best_laps_count');
+                if (saved !== null) {
+                    const val = parseInt(saved, 10);
+                    if (!isNaN(val) && val >= 1 && val <= 10) {
+                        bestLapsCount = val;
+                        bestLapsInput.value = val;
+                        return;
+                    }
+                }
+                bestLapsCount = 3;
+                bestLapsInput.value = 3;
+            }
+
+            function saveBestLapsCount() {
+                const val = parseInt(bestLapsInput.value, 10);
+                if (!isNaN(val) && val >= 1 && val <= 10) {
+                    bestLapsCount = val;
+                    localStorage.setItem('mqdr_best_laps_count', val);
+                } else {
+                    bestLapsCount = 3;
+                    bestLapsInput.value = 3;
+                }
+                updateELRS();
+            }
+
+            bestLapsInput.addEventListener('change', saveBestLapsCount);
+            bestLapsInput.addEventListener('input', function() {
+                const val = parseInt(this.value, 10);
+                if (!isNaN(val) && val >= 1 && val <= 10) {
+                    bestLapsCount = val;
+                    updateELRS();
+                }
+            });
+
+            // Audio
+            let audioCtx = null;
+
+            function getAudioContext() {
+                if (!audioCtx) {
+                    audioCtx = new(window.AudioContext || window.webkitAudioContext)();
+                }
+                return audioCtx;
+            }
+
+            function playBeep(duration, frequency = 800, baseVolume = 0.3) {
+                try {
+                    const ctx = getAudioContext();
+                    const oscillator = ctx.createOscillator();
+                    const gainNode = ctx.createGain();
+                    oscillator.connect(gainNode);
+                    gainNode.connect(ctx.destination);
+                    oscillator.frequency.value = frequency;
+                    oscillator.type = 'sine';
+                    const vol = Math.min(1, Math.max(0, baseVolume * volumeMultiplier));
+                    gainNode.gain.setValueAtTime(vol, ctx.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration / 1000);
+                    oscillator.start(ctx.currentTime);
+                    oscillator.stop(ctx.currentTime + duration / 1000);
+                } catch (e) { /* ignore */ }
+            }
+
+            function beepShort() { playBeep(100, 800, 0.3); }
+
+            function beepLong() { playBeep(800, 1200, 0.4); }
+
+            function beepTriple() {
+                beepShort();
+                setTimeout(() => beepShort(), 150);
+                setTimeout(() => beepShort(), 300);
+            }
+
+            // Volume control
+            function loadVolume() {
+                const saved = localStorage.getItem('mqdr_volume');
+                if (saved !== null) {
+                    const val = parseInt(saved, 10);
+                    if (!isNaN(val) && val >= 0 && val <= 100) {
+                        volumeSlider.value = val;
+                        volumeMultiplier = val / 100;
+                        volumeValue.textContent = val + '%';
+                        return;
+                    }
+                }
+                volumeSlider.value = 70;
+                volumeMultiplier = 0.7;
+                volumeValue.textContent = '70%';
+            }
+
+            function saveVolume() {
+                const val = parseInt(volumeSlider.value, 10);
+                localStorage.setItem('mqdr_volume', val);
+                volumeMultiplier = val / 100;
+                volumeValue.textContent = val + '%';
+            }
+            volumeSlider.addEventListener('input', saveVolume);
+
+            // Load settings (button, volume, bestLaps)
+            function loadSettings() {
+                const saved = localStorage.getItem('laps_trainer_radiomaster');
+                if (saved) {
+                    try {
+                        const data = JSON.parse(saved);
+                        if (data.button) {
+                            buttonSelect.value = data.button;
+                            selectedButton = data.button;
+                        }
+                    } catch (e) {}
+                }
+                loadVolume();
+                loadDisplayFormat();
+                loadBestLapsCount();
+            }
+
+            function saveSettings() {
+                try {
+                    localStorage.setItem('laps_trainer_radiomaster', JSON.stringify({
+                        button: selectedButton
+                    }));
+                } catch (e) {}
+            }
+
+            loadSettings();
+            buttonSelect.addEventListener('change', function() {
+                selectedButton = this.value;
+                saveSettings();
+            });
+
+            // Format time
+            function formatTime(ms) {
+                if (ms < 0) ms = 0;
+                const totalSec = Math.floor(ms / 1000);
+                const minutes = Math.floor(totalSec / 60);
+                const seconds = totalSec % 60;
+                const centiseconds = Math.floor((ms % 1000) / 10);
+                return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
+            }
+
+            // Update ELRS Backpack (среднее за X лучших кругов)
+            function updateELRS() {
+                const count = laps.length;
+                const totalTimeStr = formatTime(totalElapsed);
+
+                let infoText = '';
+                if (count === 0) {
+                    if (isRunning) {
+                        infoText = 'Гонка...';
+                    } else if (isCountdown) {
+                        infoText = `Старт ${countdownSeconds}s`;
+                    } else {
+                        infoText = 'Ожидание';
+                    }
+                } else {
+                    if (displayFormat === 0) {
+                        infoText = `Круги: ${count}`;
+                    } else {
+                        infoText = `${count} кругов за ${totalTimeStr}`;
+                    }
+                }
+                elrsInfo.textContent = infoText;
+
+                if (count === 0) {
+                    elrsLapNum.textContent = '--';
+                    elrsLapTime.textContent = '--:--.--';
+                    elrsBest.textContent = 'Лучший: --';
+                    elrsTotal.textContent = 'Всего: 0';
+                    elrsLed.className = 'led';
+                    elrsStatusText.textContent = isRunning ? 'Гонка' : (isCountdown ? 'Старт' : 'Ожидание');
+                    if (isRunning) {
+                        elrsLed.className = 'led active';
+                        elrsStatusText.textContent = 'Гонка';
+                    } else if (isCountdown) {
+                        elrsLed.className = 'led';
+                        elrsStatusText.textContent = 'Старт';
+                    } else {
+                        elrsLed.className = 'led';
+                        elrsStatusText.textContent = 'Ожидание';
+                    }
+                    return;
+                }
+
+                const last = laps[count - 1];
+                elrsLapNum.textContent = `#${count}`;
+                elrsLapTime.textContent = formatTime(last);
+
+                // Вычисляем среднее за X лучших кругов
+                const sorted = [...laps].sort((a, b) => a - b);
+                const take = Math.min(bestLapsCount, sorted.length);
+                const bestLaps = sorted.slice(0, take);
+                const avg = bestLaps.reduce((s, v) => s + v, 0) / take;
+                const bestOverall = Math.min(...laps);
+
+                let bestText = '';
+                if (take === 1) {
+                    bestText = `Лучший: ${formatTime(bestOverall)}`;
+                } else {
+                    bestText = `Среднее за ${take}: ${formatTime(avg)}`;
+                }
+                elrsBest.textContent = bestText;
+                elrsTotal.textContent = `Всего: ${count}`;
+
+                if (isRunning) {
+                    elrsLed.className = 'led active';
+                    elrsStatusText.textContent = 'В гонке';
+                } else {
+                    elrsLed.className = 'led';
+                    elrsStatusText.textContent = 'Стоп';
+                }
+            }
+
+            // Update all displays
+            function updateDisplays() {
+                totalTimeEl.textContent = formatTime(totalElapsed);
+                lapCountEl.textContent = laps.length;
+                if (laps.length > 0) {
+                    lastLapTimeEl.textContent = formatTime(laps[laps.length - 1]);
+                } else {
+                    lastLapTimeEl.textContent = '–';
+                }
+                if (laps.length > 0) {
+                    const best = Math.min(...laps);
+                    bestLapTimeEl.textContent = formatTime(best);
+                } else {
+                    bestLapTimeEl.textContent = '–';
+                }
+                renderLapList();
+                updateELRS();
+
+                if (isCountdown) {
+                    statusLabel.textContent = `● СТАРТ ${countdownSeconds}s`;
+                    statusLabel.className = 'status countdown';
+                } else if (isRunning) {
+                    statusLabel.textContent = '● В ГОНКЕ';
+                    statusLabel.className = 'status active';
+                } else {
+                    statusLabel.textContent = '● СТОП';
+                    statusLabel.className = 'status';
+                }
+
+                if (isCountdown) {
+                    lapBtn.classList.add('countdown-btn');
+                    lapBtn.classList.remove('active-btn', 'stopped');
+                    lapBtnLabel.textContent = `${countdownSeconds}`;
+                    lapBtnSub.textContent = 'ждём...';
+                } else if (isRunning) {
+                    lapBtn.classList.add('active-btn');
+                    lapBtn.classList.remove('stopped', 'countdown-btn');
+                    lapBtnLabel.textContent = 'КРУГ';
+                    lapBtnSub.textContent = laps.length > 0 ? `#${laps.length + 1}` : 'старт';
+                } else {
+                    lapBtn.classList.remove('active-btn', 'countdown-btn');
+                    lapBtn.classList.add('stopped');
+                    lapBtnLabel.textContent = 'СТОП';
+                    lapBtnSub.textContent = 'гонка не активна';
+                }
+
+                startBtn.disabled = isRunning || isCountdown;
+                stopBtn.disabled = !isRunning && !isCountdown;
+            }
+
+            // Список кругов без дельты
+            function renderLapList() {
+                if (laps.length === 0) {
+                    lapListEl.innerHTML = '<div class="empty-laps">Нет кругов</div>';
+                    return;
+                }
+                let best = Math.min(...laps);
+                let html = '';
+                laps.forEach((lapTime, index) => {
+                    const isBest = lapTime === best;
+                    html += `
+                                <div class="lap-item ${isBest ? 'best' : ''}">
+                                    <span class="idx">#${index + 1}</span>
+                                    <span class="time">${formatTime(lapTime)}</span>
+                                </div>
+                            `;
+                });
+                lapListEl.innerHTML = html;
+                lapListEl.scrollTop = 0;
+            }
+
+            // Timer loop
+            function tick(timestamp) {
+                if (!isRunning) {
+                    if (animFrame) {
+                        cancelAnimationFrame(animFrame);
+                        animFrame = null;
+                    }
+                    return;
+                }
+                if (lastTimestamp === 0) lastTimestamp = timestamp;
+                const delta = timestamp - lastTimestamp;
+                lastTimestamp = timestamp;
+                totalElapsed += delta;
+                updateDisplays();
+                animFrame = requestAnimationFrame(tick);
+            }
+
+            // Start racing
+            function startRacing() {
+                isRunning = true;
+                isCountdown = false;
+                if (laps.length === 0) {
+                    lapStartTime = performance.now();
+                } else {
+                    const sumPrevious = laps.reduce((a, b) => a + b, 0);
+                    const currentLapElapsed = totalElapsed - sumPrevious;
+                    lapStartTime = performance.now() - currentLapElapsed;
+                }
+                lastTimestamp = 0;
+                if (animFrame) cancelAnimationFrame(animFrame);
+                animFrame = requestAnimationFrame(tick);
+                updateDisplays();
+                if (navigator.vibrate) navigator.vibrate(30);
+                updateRadioStatus();
+                debugInfo.textContent = '🏁 Гонка началась!';
+            }
+
+            // Countdown with specified duration
+            function startCountdown(duration) {
+                if (isRunning || isCountdown) return;
+                if (countdownInterval) {
+                    clearInterval(countdownInterval);
+                    countdownInterval = null;
+                }
+                totalElapsed = 0;
+                laps = [];
+                lapStartTime = 0;
+                updateDisplays();
+
+                isCountdown = true;
+                countdownSeconds = duration;
+                updateDisplays();
+                timerLabel.textContent = 'СТАРТ ЧЕРЕЗ';
+                totalTimeEl.className = 'time countdown';
+                totalTimeEl.textContent = countdownSeconds;
+
+                countdownInterval = setInterval(() => {
+                    countdownSeconds--;
+                    if (countdownSeconds > 0) {
+                        beepShort();
+                        totalTimeEl.textContent = countdownSeconds;
+                        updateDisplays();
+                        if (navigator.vibrate) navigator.vibrate(20);
+                    } else if (countdownSeconds === 0) {
+                        beepLong();
+                        totalTimeEl.textContent = 'GO!';
+                        updateDisplays();
+                        if (navigator.vibrate) navigator.vibrate([50, 100, 50]);
+                        clearInterval(countdownInterval);
+                        countdownInterval = null;
+                        isCountdown = false;
+                        timerLabel.textContent = 'ОБЩЕЕ ВРЕМЯ';
+                        totalTimeEl.className = 'time';
+                        startRacing();
+                    }
+                }, 1000);
+
+                startBtn.disabled = true;
+                stopBtn.disabled = false;
+                debugInfo.textContent = `⏳ Обратный отсчёт ${duration} с...`;
+            }
+
+            // Stop
+            function stopTimer() {
+                if (isCountdown) {
+                    if (countdownInterval) {
+                        clearInterval(countdownInterval);
+                        countdownInterval = null;
+                    }
+                    isCountdown = false;
+                    timerLabel.textContent = 'ОБЩЕЕ ВРЕМЯ';
+                    totalTimeEl.className = 'time';
+                    totalTimeEl.textContent = '00:00.00';
+                    totalElapsed = 0;
+                    laps = [];
+                    lapStartTime = 0;
+                    updateDisplays();
+                    debugInfo.textContent = '⏹ Отсчёт прерван';
+                    if (navigator.vibrate) navigator.vibrate(30);
+                    startBtn.disabled = false;
+                    stopBtn.disabled = true;
+                    return;
+                }
+
+                if (!isRunning) return;
+                isRunning = false;
+                if (animFrame) {
+                    cancelAnimationFrame(animFrame);
+                    animFrame = null;
+                }
+                updateDisplays();
+                if (navigator.vibrate) navigator.vibrate([30, 60, 30]);
+                updateRadioStatus();
+                debugInfo.textContent = '⏹ Гонка остановлена';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+            }
+
+            // Stop with triple beep
+            function stopWithTripleBeep() {
+                if (!isRunning) {
+                    debugInfo.textContent = 'Гонка не активна, удержание игнорируется';
+                    return;
+                }
+                beepTriple();
+                setTimeout(() => {
+                    stopTimer();
+                    debugInfo.textContent = '⏹ Остановка по удержанию';
+                }, 400);
+            }
+
+            // Reset
+            function resetAll() {
+                if (isCountdown) {
+                    if (countdownInterval) {
+                        clearInterval(countdownInterval);
+                        countdownInterval = null;
+                    }
+                    isCountdown = false;
+                    timerLabel.textContent = 'ОБЩЕЕ ВРЕМЯ';
+                    totalTimeEl.className = 'time';
+                }
+                if (isRunning) {
+                    isRunning = false;
+                    if (animFrame) {
+                        cancelAnimationFrame(animFrame);
+                        animFrame = null;
+                    }
+                }
+                totalElapsed = 0;
+                laps = [];
+                lapStartTime = 0;
+                updateDisplays();
+                if (navigator.vibrate) navigator.vibrate(20);
+                updateRadioStatus();
+                debugInfo.textContent = '⟳ Сброс выполнен';
+                startBtn.disabled = false;
+                stopBtn.disabled = true;
+                if (pressTimerId) {
+                    clearTimeout(pressTimerId);
+                    pressTimerId = null;
+                }
+                pressActive = false;
+                pressSource = null;
+                updateELRS();
+            }
+
+            // Record lap
+            function recordLap() {
+                if (!isRunning) {
+                    debugInfo.textContent = '⚠️ Гонка не активна. Нажмите «Старт».';
+                    if (navigator.vibrate) navigator.vibrate(10);
+                    return;
+                }
+                const nowTime = performance.now();
+                let lapTime = nowTime - lapStartTime;
+                if (lapTime < 0) lapTime = 0;
+
+                if (lapTime < 1000) {
+                    debugInfo.textContent = `⏱️ Слишком короткий круг (${formatTime(lapTime)}) — минимум 1.00 с`;
+                    if (navigator.vibrate) navigator.vibrate(30);
+                    return;
+                }
+
+                laps.push(lapTime);
+                lapStartTime = nowTime;
+                updateDisplays();
+                if (navigator.vibrate) navigator.vibrate(50);
+                debugInfo.textContent = `✅ Круг #${laps.length} зафиксирован (${formatTime(lapTime)})`;
+                beepShort();
+                updateRadioStatus();
+            }
+
+            // --- Обработка нажатий ---
+
+            function onPressStart(source) {
+                if (isCountdown) {
+                    debugInfo.textContent = '⏳ Подождите старта!';
+                    if (navigator.vibrate) navigator.vibrate(10);
+                    return;
+                }
+                if (pressActive) return;
+                pressActive = true;
+                pressSource = source;
+                pressStartTime = performance.now();
+                if (pressTimerId) clearTimeout(pressTimerId);
+
+                let action = null;
+                if (source === 'gamepad') {
+                    if (isRunning) {
+                        action = stopWithTripleBeep;
+                    } else if (!isRunning && !isCountdown) {
+                        action = () => {
+                            if (pressActive) {
+                                startCountdown(COUNTDOWN_GP);
+                            }
+                        };
+                    }
+                } else if (source === 'screen') {
+                    if (isRunning) {
+                        action = stopWithTripleBeep;
+                    }
+                }
+
+                if (action) {
+                    pressTimerId = setTimeout(() => {
+                        action();
+                        pressActive = false;
+                        pressSource = null;
+                        pressTimerId = null;
+                    }, 1000);
+                } else {
+                    pressTimerId = null;
+                }
+            }
+
+            function onPressEnd() {
+                if (pressActive) {
+                    if (pressTimerId) {
+                        clearTimeout(pressTimerId);
+                        pressTimerId = null;
+                    }
+                    const duration = performance.now() - pressStartTime;
+                    if (duration < 1000) {
+                        if (isRunning) {
+                            recordLap();
+                        } else {
+                            if (!isCountdown) {
+                                debugInfo.textContent = 'Нажмите «Старт» или удерживайте кнопку пульта 1 с для старта.';
+                            }
+                        }
+                    }
+                    pressActive = false;
+                    pressSource = null;
+                }
+            }
+
+            // Gamepad handling
+            function updateRadioStatus() {
+                const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+                let connected = false;
+                let buttonCount = 0;
+                for (let gp of gamepads) {
+                    if (gp && gp.connected) {
+                        connected = true;
+                        buttonCount = gp.buttons ? gp.buttons.length : 0;
+                        break;
+                    }
+                }
+                gamepadConnected = connected;
+                if (connected) {
+                    radioDot.className = 'dot connected';
+                    radioLabel.textContent = `Radiomaster (${buttonCount} кн.)`;
+                    if (!isRunning && !isCountdown) {
+                        debugInfo.textContent = '🎮 Пульт готов. Удерживайте кнопку 1 с для старта (3 с отсчёт).';
+                    }
+                } else {
+                    radioDot.className = 'dot';
+                    radioLabel.textContent = 'Нет пульта';
+                    if (!isRunning && !isCountdown) {
+                        debugInfo.textContent = 'Пульт не обнаружен. Подключите Radiomaster.';
+                    }
+                }
+            }
+
+            function scanGamepads() {
+                updateRadioStatus();
+                const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+                let found = false;
+                for (let gp of gamepads) {
+                    if (gp && gp.connected) {
+                        found = true;
+                        break;
+                    }
+                }
+                if (found) {
+                    debugInfo.textContent = '✅ Пульт найден! Удерживайте кнопку 1 с для старта.';
+                } else {
+                    debugInfo.textContent = '❌ Пульт не найден. Убедитесь, что он подключен, и нажмите любую кнопку.';
+                }
+                updateRadioStatus();
+                if (navigator.vibrate) navigator.vibrate(20);
+            }
+
+            // Poll gamepad
+            function pollGamepad() {
+                updateRadioStatus();
+                const gamepads = navigator.getGamepads ? navigator.getGamepads() : [];
+                let anyPressed = false;
+                for (let gp of gamepads) {
+                    if (gp && gp.connected) {
+                        const buttons = gp.buttons;
+                        if (selectedButton === 'any') {
+                            for (let i = 0; i < buttons.length; i++) {
+                                if (buttons[i].pressed) {
+                                    anyPressed = true;
+                                    break;
+                                }
+                            }
+                        } else {
+                            const idx = parseInt(selectedButton, 10);
+                            if (idx >= 0 && idx < buttons.length && buttons[idx].pressed) {
+                                anyPressed = true;
+                            }
+                        }
+                        if (anyPressed) break;
+                    }
+                }
+
+                if (anyPressed && !pressActive) {
+                    onPressStart('gamepad');
+                } else if (!anyPressed && pressActive && pressSource === 'gamepad') {
+                    onPressEnd();
+                } else if (anyPressed && pressActive && pressSource === 'gamepad') {
+                    // still holding
+                }
+
+                requestAnimationFrame(pollGamepad);
+            }
+
+            // Setup screen button
+            function setupScreenButton() {
+                const btn = document.getElementById('lapBtn');
+                btn.addEventListener('mousedown', (e) => {
+                    e.preventDefault();
+                    if (!pressActive) onPressStart('screen');
+                });
+                btn.addEventListener('mouseup', (e) => {
+                    e.preventDefault();
+                    if (pressActive && pressSource === 'screen') onPressEnd();
+                });
+                btn.addEventListener('mouseleave', (e) => {
+                    if (pressActive && pressSource === 'screen') onPressEnd();
+                });
+                btn.addEventListener('touchstart', (e) => {
+                    e.preventDefault();
+                    if (!pressActive) onPressStart('screen');
+                }, { passive: false });
+                btn.addEventListener('touchend', (e) => {
+                    e.preventDefault();
+                    if (pressActive && pressSource === 'screen') onPressEnd();
+                }, { passive: false });
+                btn.addEventListener('touchcancel', (e) => {
+                    e.preventDefault();
+                    if (pressActive && pressSource === 'screen') onPressEnd();
+                }, { passive: false });
+            }
+
+            // Init
+            function init() {
+                resetAll();
+                setupScreenButton();
+                pollGamepad();
+                scanGamepads();
+                window.addEventListener('gamepadconnected', (e) => {
+                    updateRadioStatus();
+                    debugInfo.textContent = `🔌 Пульт подключен: ${e.gamepad.id}`;
+                    scanGamepads();
+                });
+                window.addEventListener('gamepaddisconnected', (e) => {
+                    updateRadioStatus();
+                    debugInfo.textContent = '🔌 Пульт отключён';
+                });
+            }
+
+            // Event listeners for control buttons
+            startBtn.addEventListener('click', function() {
+                if (!isRunning && !isCountdown) {
+                    startCountdown(COUNTDOWN_DEFAULT);
+                }
+            });
+            stopBtn.addEventListener('click', stopTimer);
+            resetBtn.addEventListener('click', resetAll);
+            scanBtn.addEventListener('click', scanGamepads);
+            radioStatus.addEventListener('click', scanGamepads);
+
+            // Keyboard shortcuts
+            document.addEventListener('keydown', (e) => {
+                if (e.key === ' ' || e.key === 'Enter') {
+                    e.preventDefault();
+                    if (isRunning) {
+                        recordLap();
+                    } else if (!isCountdown) {
+                        startCountdown(COUNTDOWN_DEFAULT);
+                    }
+                }
+                if (e.key === 's' || e.key === 'S') {
+                    if (isRunning || isCountdown) stopTimer();
+                }
+                if (e.key === 'r' || e.key === 'R') resetAll();
+            });
+
+            // Mobile double-tap prevention
+            document.querySelectorAll('button, .circle-btn').forEach(el => {
+                el.addEventListener('touchstart', (e) => {}, { passive: true });
+            });
+            let lastTouchEnd = 0;
+            document.addEventListener('touchend', (e) => {
+                const now = Date.now();
+                if (now - lastTouchEnd <= 300) {
+                    e.preventDefault();
+                }
+                lastTouchEnd = now;
+            }, { passive: false });
+
+            init();
+
+            window.__laps = {
+                laps,
+                totalElapsed,
+                isRunning,
+                isCountdown,
+                startCountdown,
+                startRacing,
+                stopTimer,
+                resetAll,
+                recordLap,
+                gamepadConnected,
+                scanGamepads,
+                stopWithTripleBeep,
+                setVolume: (v) => { volumeMultiplier = v / 100;
+                    volumeSlider.value = v;
+                    volumeValue.textContent = v + '%';
+                    saveVolume(); },
+                toggleFormat: () => { displayFormat = displayFormat === 0 ? 1 : 0;
+                    saveDisplayFormat();
+                    updateELRS(); },
+                setBestLapsCount: (n) => { if (n >= 1 && n <= 10) { bestLapsCount = n;
+                        bestLapsInput.value = n;
+                        saveBestLapsCount();
+                        updateELRS(); } }
+            };
+
+        })();
+    </script>
+</body>
+</html>
