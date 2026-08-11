@@ -13,11 +13,10 @@
     <meta name="theme-color" content="#0e1118" />
     <meta name="background-color" content="#0e1118" />
 
-    <!-- Manifest (inline as data URI) -->
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1RRFIgVHJhaW5lciIsCiAgInNob3J0X25hbWUiOiAiTVFEUiBUcmFpbmVyIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJkaXNwbGF5IjogInN0YW5kYWxvbmUiLAogICJiYWNrZ3JvdW5kX2NvbG9yIjogIiMwZTExMTgiLAogICJjYXRlZ29yeSI6ICJzcG9ydHMiLAogICJ0aGVtZV9jb2xvciI6ICIjMGRmM2YwIiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLDxzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTkyIDE5Mic+PHJlY3Qgd2lkdGg9JzE5MicgaGVpZ2h0PScxOTInIGZpbGw9JyMwZTExMTgnLz48dGV4dCB4PSc5NicgeT0nMTI0JyBmb250LXNpemU9JzcwJyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmaWxsPScjMGRmM2YwJyBmb250LWZhbWlseT0nc2Fucy1zZXJpZic+RlA8L3RleHQ+PC9zdmc+IiwKICAgICAgInNpemVzIjogIjE5MngxOTIiLAogICAgICAidHlwZSI6ICJpbWFnZS9zdmcreG1sIgogICAgfSwKICAgIHsKICAgICAgInNyYyI6ICJkYXRhOmltYWdlL3N2Zyt4bWwsPHN2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA1MTIgNTEyJz48cmVjdCB3aWR0aD0nNTEyJyBoZWlnaHQ9JzUxMicgZmlsbD0nIzBlMTExOCcvPjx0ZXh0IHg9JzI1NicgeT0nMzMyJyBmb250LXNpemU9JzE4MCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nIzBkZjNmMCcgZm9udC1mYW1pbHk9J3NhbnMtc2VyaWYnPkZQPC90ZXh0Pjwvc3ZnPiIsCiAgICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIsCiAgICAgICJwdXJwb3NlIjogImFueSBtYXNrYWJsZSIKICAgIH0KICBdCn0=" />
+    <!-- Dynamic manifest will be inserted by script -->
 
     <style>
-        /* ... existing styles ... */
+        /* ... (same as before) ... */
         * {
             margin: 0;
             padding: 0;
@@ -45,8 +44,44 @@
             padding: 20px 16px 28px;
             box-shadow: 0 20px 40px rgba(0, 0, 0, 0.7);
             border: 1px solid #2a3545;
+            position: relative;
         }
 
+        .install-btn {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: linear-gradient(135deg, #2a6bcb, #1a4f9a);
+            color: #fff;
+            border: none;
+            border-radius: 40px;
+            padding: 12px 28px;
+            font-size: 16px;
+            font-weight: 600;
+            box-shadow: 0 8px 30px rgba(59, 140, 255, 0.3);
+            cursor: pointer;
+            transition: all 0.3s;
+            z-index: 999;
+            display: none;
+            font-family: inherit;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .install-btn:hover {
+            transform: translateX(-50%) scale(1.03);
+            box-shadow: 0 12px 40px rgba(59, 140, 255, 0.4);
+        }
+
+        .install-btn:active {
+            transform: translateX(-50%) scale(0.95);
+        }
+
+        .install-btn.show {
+            display: block;
+        }
+
+        /* ... (rest of existing styles) ... */
         .header {
             display: flex;
             justify-content: space-between;
@@ -620,6 +655,11 @@
                 width: 50px;
                 font-size: 12px;
             }
+            .install-btn {
+                padding: 10px 20px;
+                font-size: 14px;
+                bottom: 16px;
+            }
         }
 
         @media (max-width: 360px) {
@@ -656,12 +696,16 @@
                 width: 40px;
                 font-size: 11px;
             }
+            .install-btn {
+                padding: 8px 16px;
+                font-size: 12px;
+                bottom: 12px;
+            }
         }
     </style>
 </head>
 <body>
     <div class="app" id="app">
-        <!-- ... content ... -->
         <div class="header">
             <div class="header-left">
                 <h1>🏁 MQDR Trainer</h1>
@@ -773,9 +817,114 @@
         </div>
     </div>
 
+    <!-- Кнопка установки (PWA) -->
+    <button class="install-btn" id="installBtn">📲 Установить приложение</button>
+
     <script>
-        // ... existing JavaScript (unchanged) ...
-        (function() {
+        // ============================================================
+        //  PWA MANIFEST GENERATION
+        // ============================================================
+        (function generateManifest() {
+            const manifest = {
+                name: "MQDR Trainer",
+                short_name: "MQDR Trainer",
+                start_url: ".",
+                display: "standalone",
+                background_color: "#0e1118",
+                theme_color: "#0df3f0",
+                icons: [{
+                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%230e1118'/%3E%3Ctext x='96' y='124' font-size='70' text-anchor='middle' fill='%230df3f0' font-family='sans-serif'%3EFP%3C/text%3E%3C/svg%3E",
+                    sizes: "192x192",
+                    type: "image/svg+xml"
+                }, {
+                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230e1118'/%3E%3Ctext x='256' y='332' font-size='180' text-anchor='middle' fill='%230df3f0' font-family='sans-serif'%3EFP%3C/text%3E%3C/svg%3E",
+                    sizes: "512x512",
+                    type: "image/svg+xml",
+                    purpose: "any maskable"
+                }]
+            };
+
+            const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+
+            const link = document.createElement('link');
+            link.rel = 'manifest';
+            link.href = url;
+            document.head.appendChild(link);
+        })();
+
+        // ============================================================
+        //  INSTALL BUTTON LOGIC
+        // ============================================================
+        (function installButton() {
+            const installBtn = document.getElementById('installBtn');
+            let deferredPrompt = null;
+
+            // Скрываем кнопку по умолчанию
+            installBtn.classList.remove('show');
+
+            // Перехватываем событие beforeinstallprompt
+            window.addEventListener('beforeinstallprompt', (e) => {
+                e.preventDefault();
+                deferredPrompt = e;
+                installBtn.classList.add('show');
+                console.log('PWA install prompt available');
+            });
+
+            // Обработчик клика по кнопке установки
+            installBtn.addEventListener('click', async () => {
+                if (deferredPrompt) {
+                    // Показываем диалог установки
+                    deferredPrompt.prompt();
+                    const result = await deferredPrompt.userChoice;
+                    console.log('User choice:', result.outcome);
+                    if (result.outcome === 'accepted') {
+                        installBtn.classList.remove('show');
+                    }
+                    deferredPrompt = null;
+                } else {
+                    // Если по какой-то причине deferredPrompt нет, можно предложить инструкцию
+                    alert('Установка доступна через меню браузера: "Добавить на экран "Домой""');
+                }
+            });
+
+            // Если приложение уже установлено, скрываем кнопку
+            window.addEventListener('appinstalled', () => {
+                installBtn.classList.remove('show');
+                console.log('App installed');
+            });
+
+            // Для iOS (не поддерживает beforeinstallprompt) — показываем кнопку с инструкцией
+            const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
+            if (isIOS) {
+                // На iOS кнопка будет показывать инструкцию
+                installBtn.classList.add('show');
+                installBtn.textContent = '📲 Добавить на экран "Домой"';
+                installBtn.addEventListener('click', () => {
+                    alert('Нажмите "Поделиться" → "На экран «Домой»", чтобы установить приложение.');
+                });
+            }
+
+            // Для других браузеров, где нет beforeinstallprompt, но PWA поддерживается
+            // Проверяем, доступен ли navigator.getInstalledRelatedApps (необязательно)
+            // Если кнопка не появилась через beforeinstallprompt через 5 секунд, показываем её как подсказку
+            setTimeout(() => {
+                if (!installBtn.classList.contains('show') && !isIOS) {
+                    // Проверим, не установлено ли уже приложение
+                    // Для простоты просто покажем кнопку с альтернативным действием
+                    installBtn.classList.add('show');
+                    installBtn.textContent = '📲 Установить приложение';
+                    // Но не будем менять обработчик, т.к. deferredPrompt может появиться позже
+                    // (в некоторых браузерах событие приходит после загрузки)
+                }
+            }, 5000);
+
+        })();
+
+        // ============================================================
+        //  MAIN APPLICATION LOGIC (same as before)
+        // ============================================================
+        (function mainApp() {
             'use strict';
 
             // DOM refs
