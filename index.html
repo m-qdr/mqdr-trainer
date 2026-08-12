@@ -55,7 +55,7 @@
             color: #fff;
             border: none;
             border-radius: 40px;
-            padding: 12px 28px;
+            padding: 12px 48px 12px 24px;
             font-size: 16px;
             font-weight: 600;
             box-shadow: 0 8px 30px rgba(59, 140, 255, 0.3);
@@ -65,6 +65,37 @@
             display: none;
             font-family: inherit;
             border: 1px solid rgba(255, 255, 255, 0.1);
+            position: fixed;
+            white-space: nowrap;
+        }
+
+        .install-btn .close-btn {
+            position: absolute;
+            right: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255, 255, 255, 0.15);
+            border: none;
+            color: #fff;
+            font-size: 20px;
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: background 0.2s;
+            padding: 0;
+            line-height: 1;
+        }
+
+        .install-btn .close-btn:hover {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        .install-btn .close-btn:active {
+            transform: scale(0.9);
         }
 
         .install-btn:hover {
@@ -280,8 +311,27 @@
             font-size: 24px;
             color: #b0e0ff;
             letter-spacing: 1px;
-            text-align: right;
+            text-align: center;
             flex: 1;
+        }
+
+        .elrs-data .lap-delta {
+            font-size: 20px;
+            font-weight: 500;
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .elrs-data .lap-delta.positive {
+            color: #f87171;
+        }
+
+        .elrs-data .lap-delta.negative {
+            color: #3fe8b0;
+        }
+
+        .elrs-data .lap-delta.zero {
+            color: #5f7a9a;
         }
 
         .elrs-backpack .elrs-footer {
@@ -582,6 +632,7 @@
             border-bottom: 1px solid #1d2836;
             font-size: 15px;
             font-variant-numeric: tabular-nums;
+            align-items: center;
         }
 
         .lap-item .idx {
@@ -592,9 +643,30 @@
         .lap-item .time {
             font-weight: 500;
             color: #dce6f2;
+            flex: 1;
+            text-align: center;
+        }
+
+        .lap-item .diff {
+            font-size: 13px;
+            min-width: 60px;
+            text-align: right;
+            font-weight: 500;
+        }
+
+        .lap-item .diff.positive {
+            color: #f87171;
+        }
+
+        .lap-item .diff.zero {
+            color: #5f7a9a;
         }
 
         .lap-item.best .time {
+            color: #fbbf24;
+        }
+
+        .lap-item.best .diff {
             color: #fbbf24;
         }
 
@@ -645,6 +717,10 @@
             .lap-item {
                 font-size: 13px;
             }
+            .lap-item .diff {
+                font-size: 12px;
+                min-width: 50px;
+            }
             .settings-row {
                 padding: 6px 12px;
             }
@@ -660,6 +736,10 @@
             .elrs-data .lap-time {
                 font-size: 20px;
             }
+            .elrs-data .lap-delta {
+                font-size: 16px;
+                min-width: 60px;
+            }
             .settings-row input[type="range"] {
                 width: 80px;
             }
@@ -671,9 +751,15 @@
                 font-size: 12px;
             }
             .install-btn {
-                padding: 10px 20px;
+                padding: 10px 40px 10px 20px;
                 font-size: 14px;
                 bottom: 16px;
+            }
+            .install-btn .close-btn {
+                width: 32px;
+                height: 32px;
+                font-size: 18px;
+                right: 4px;
             }
         }
 
@@ -704,6 +790,14 @@
             .elrs-data .lap-time {
                 font-size: 16px;
             }
+            .elrs-data .lap-delta {
+                font-size: 14px;
+                min-width: 50px;
+            }
+            .lap-item .diff {
+                font-size: 11px;
+                min-width: 40px;
+            }
             .settings-row input[type="range"] {
                 width: 60px;
             }
@@ -712,9 +806,15 @@
                 font-size: 11px;
             }
             .install-btn {
-                padding: 8px 16px;
+                padding: 8px 34px 8px 16px;
                 font-size: 12px;
                 bottom: 12px;
+            }
+            .install-btn .close-btn {
+                width: 28px;
+                height: 28px;
+                font-size: 16px;
+                right: 4px;
             }
         }
     </style>
@@ -744,6 +844,7 @@
             <div class="elrs-data">
                 <span class="lap-number" id="elrsLapNum">--</span>
                 <span class="lap-time" id="elrsLapTime">--:--.--</span>
+                <span class="lap-delta" id="elrsDelta">+0.00</span>
             </div>
             <div class="elrs-footer">
                 <span id="elrsBest">Лучший: --</span>
@@ -826,7 +927,6 @@
             </label>
         </div>
 
-        <!-- Голосовые подсказки -->
         <div class="settings-row">
             <label>
                 🗣️ Голосовые подсказки
@@ -842,7 +942,10 @@
     </div>
 
     <!-- Кнопка установки (PWA) -->
-    <button class="install-btn" id="installBtn">📲 Установить приложение</button>
+    <button class="install-btn" id="installBtn">
+        <span id="installBtnText">📲 Установить приложение</span>
+        <span class="close-btn" id="installCloseBtn">✕</span>
+    </button>
 
     <script>
         // ============================================================
@@ -878,22 +981,36 @@
         })();
 
         // ============================================================
-        //  INSTALL BUTTON LOGIC
+        //  INSTALL BUTTON LOGIC (with close)
         // ============================================================
         (function installButton() {
             const installBtn = document.getElementById('installBtn');
+            const installBtnText = document.getElementById('installBtnText');
+            const closeBtn = document.getElementById('installCloseBtn');
             let deferredPrompt = null;
+
+            // Проверяем, не скрыт ли баннер в сессии
+            if (sessionStorage.getItem('install_banner_hidden') === 'true') {
+                installBtn.classList.remove('show');
+                return;
+            }
 
             installBtn.classList.remove('show');
 
             window.addEventListener('beforeinstallprompt', (e) => {
                 e.preventDefault();
                 deferredPrompt = e;
-                installBtn.classList.add('show');
+                if (sessionStorage.getItem('install_banner_hidden') !== 'true') {
+                    installBtn.classList.add('show');
+                }
                 console.log('PWA install prompt available');
             });
 
-            installBtn.addEventListener('click', async () => {
+            // Обработчик клика на кнопку (установка)
+            installBtn.addEventListener('click', async function(e) {
+                if (e.target.closest('.close-btn')) {
+                    return;
+                }
                 if (deferredPrompt) {
                     deferredPrompt.prompt();
                     const result = await deferredPrompt.userChoice;
@@ -907,6 +1024,15 @@
                 }
             });
 
+            // Обработчик клика на крестик (закрытие)
+            closeBtn.addEventListener('click', function(e) {
+                e.stopPropagation();
+                e.preventDefault();
+                installBtn.classList.remove('show');
+                sessionStorage.setItem('install_banner_hidden', 'true');
+                console.log('Install banner closed');
+            });
+
             window.addEventListener('appinstalled', () => {
                 installBtn.classList.remove('show');
                 console.log('App installed');
@@ -914,17 +1040,22 @@
 
             const isIOS = /iPad|iPhone|iPod/.test(navigator.userAgent) && !window.MSStream;
             if (isIOS) {
-                installBtn.classList.add('show');
-                installBtn.textContent = '📲 Добавить на экран "Домой"';
-                installBtn.addEventListener('click', () => {
+                if (sessionStorage.getItem('install_banner_hidden') !== 'true') {
+                    installBtn.classList.add('show');
+                    installBtnText.textContent = '📲 Добавить на экран "Домой"';
+                }
+                installBtn.addEventListener('click', function(e) {
+                    if (e.target.closest('.close-btn')) return;
                     alert('Нажмите "Поделиться" → "На экран «Домой»", чтобы установить приложение.');
                 });
             }
 
             setTimeout(() => {
                 if (!installBtn.classList.contains('show') && !isIOS) {
-                    installBtn.classList.add('show');
-                    installBtn.textContent = '📲 Установить приложение';
+                    if (sessionStorage.getItem('install_banner_hidden') !== 'true') {
+                        installBtn.classList.add('show');
+                        installBtnText.textContent = '📲 Установить приложение';
+                    }
                 }
             }, 5000);
 
@@ -966,6 +1097,7 @@
             const elrsStatusText = document.getElementById('elrsStatusText');
             const elrsLapNum = document.getElementById('elrsLapNum');
             const elrsLapTime = document.getElementById('elrsLapTime');
+            const elrsDelta = document.getElementById('elrsDelta');
             const elrsBest = document.getElementById('elrsBest');
             const elrsTotal = document.getElementById('elrsTotal');
             const elrsInfo = document.getElementById('elrsInfo');
@@ -1030,20 +1162,17 @@
             function speak(text) {
                 if (!voiceEnabled) return;
                 if (!window.speechSynthesis) return;
-                // Отменяем предыдущую речь, чтобы избежать наложения
                 window.speechSynthesis.cancel();
                 const utterance = new SpeechSynthesisUtterance(text);
                 utterance.lang = 'ru-RU';
                 utterance.rate = 0.9;
                 utterance.pitch = 1;
-                // Попробуем найти русский голос
                 const voices = window.speechSynthesis.getVoices();
                 const ruVoice = voices.find(v => v.lang.startsWith('ru'));
                 if (ruVoice) utterance.voice = ruVoice;
                 window.speechSynthesis.speak(utterance);
             }
 
-            // Загружаем настройки
             loadVoiceSetting();
 
             // ===== DISPLAY FORMAT =====
@@ -1236,6 +1365,8 @@
                 if (count === 0) {
                     elrsLapNum.textContent = '--';
                     elrsLapTime.textContent = '--:--.--';
+                    elrsDelta.textContent = '+0.00';
+                    elrsDelta.className = 'lap-delta zero';
                     elrsBest.textContent = 'Лучший: --';
                     elrsTotal.textContent = 'Всего: 0';
                     elrsLed.className = 'led';
@@ -1257,11 +1388,28 @@
                 elrsLapNum.textContent = `#${count}`;
                 elrsLapTime.textContent = formatTime(last);
 
+                // Вычисляем лучший круг
+                const bestOverall = Math.min(...laps);
+
+                // Дельта от лучшего
+                const delta = last - bestOverall;
+                let deltaStr = '+0.00';
+                let deltaClass = 'lap-delta zero';
+                if (delta === 0) {
+                    deltaStr = '0.00';
+                    deltaClass = 'lap-delta zero';
+                } else {
+                    deltaStr = `+${formatTime(delta)}`;
+                    deltaClass = 'lap-delta positive';
+                }
+                elrsDelta.textContent = deltaStr;
+                elrsDelta.className = deltaClass;
+
+                // Вычисляем среднее за N лучших кругов
                 const sorted = [...laps].sort((a, b) => a - b);
                 const take = Math.min(bestLapsCount, sorted.length);
                 const bestLaps = sorted.slice(0, take);
                 const avg = bestLaps.reduce((s, v) => s + v, 0) / take;
-                const bestOverall = Math.min(...laps);
 
                 let bestText = '';
                 if (take === 1) {
@@ -1331,23 +1479,38 @@
                 stopBtn.disabled = !isRunning && !isCountdown;
             }
 
-            // ===== RENDER LAP LIST =====
+            // ===== RENDER LAP LIST (новые круги сверху) =====
             function renderLapList() {
                 if (laps.length === 0) {
                     lapListEl.innerHTML = '<div class="empty-laps">Нет кругов</div>';
                     return;
                 }
-                let best = Math.min(...laps);
+
+                const bestOverall = Math.min(...laps);
                 let html = '';
-                laps.forEach((lapTime, index) => {
-                    const isBest = lapTime === best;
+                // Проходим от последнего к первому (новые сверху)
+                for (let i = laps.length - 1; i >= 0; i--) {
+                    const lapTime = laps[i];
+                    const isBest = lapTime === bestOverall;
+                    const diff = lapTime - bestOverall;
+                    let diffStr = '';
+                    let diffClass = 'diff zero';
+                    if (diff === 0) {
+                        diffStr = '0.00';
+                        diffClass = 'diff zero';
+                    } else {
+                        diffStr = `+${formatTime(diff)}`;
+                        diffClass = 'diff positive';
+                    }
+                    const lapNumber = i + 1;
                     html += `
                                 <div class="lap-item ${isBest ? 'best' : ''}">
-                                    <span class="idx">#${index + 1}</span>
+                                    <span class="idx">#${lapNumber}</span>
                                     <span class="time">${formatTime(lapTime)}</span>
+                                    <span class="diff ${diffClass}">${diffStr}</span>
                                 </div>
                             `;
-                });
+                }
                 lapListEl.innerHTML = html;
                 lapListEl.scrollTop = 0;
             }
@@ -1409,7 +1572,6 @@
                 totalTimeEl.className = 'time countdown';
                 totalTimeEl.textContent = countdownSeconds;
 
-                // Озвучиваем "Старт через Х"
                 speak(`Старт через ${duration}`);
 
                 countdownInterval = setInterval(() => {
@@ -1419,7 +1581,6 @@
                         totalTimeEl.textContent = countdownSeconds;
                         updateDisplays();
                         if (navigator.vibrate) navigator.vibrate(20);
-                        // Озвучиваем цифры только если громкость > 0 (кратко)
                         if (voiceEnabled && countdownSeconds <= 3) {
                             speak(countdownSeconds.toString());
                         }
@@ -1531,8 +1692,6 @@
             }
 
             // ===== RECORD LAP =====
-            let wasBest = false; // флаг для озвучки нового лучшего
-
             function recordLap() {
                 if (!isRunning) {
                     debugInfo.textContent = '⚠️ Гонка не активна. Нажмите «Старт».';
@@ -1549,7 +1708,6 @@
                     return;
                 }
 
-                // Проверяем, был ли предыдущий лучший
                 const prevBest = laps.length > 0 ? Math.min(...laps) : Infinity;
                 const isNewBest = lapTime < prevBest;
 
@@ -1560,10 +1718,8 @@
                 debugInfo.textContent = `✅ Круг #${laps.length} зафиксирован (${formatTime(lapTime)})`;
                 beepShort();
 
-                // Озвучиваем круг
                 speak(`Круг ${laps.length}, время ${formatTime(lapTime)}`);
 
-                // Если новый лучший — озвучиваем
                 if (isNewBest) {
                     speak('Новый лучший круг!');
                 }
@@ -1760,7 +1916,6 @@
                     updateRadioStatus();
                     debugInfo.textContent = '🔌 Пульт отключён';
                 });
-                // Preload voices
                 if (window.speechSynthesis) {
                     window.speechSynthesis.getVoices();
                 }
@@ -1777,7 +1932,6 @@
             scanBtn.addEventListener('click', scanGamepads);
             radioStatus.addEventListener('click', scanGamepads);
 
-            // Keyboard shortcuts
             document.addEventListener('keydown', (e) => {
                 if (e.key === ' ' || e.key === 'Enter') {
                     e.preventDefault();
@@ -1793,7 +1947,6 @@
                 if (e.key === 'r' || e.key === 'R') resetAll();
             });
 
-            // Mobile double-tap prevention
             document.querySelectorAll('button, .circle-btn').forEach(el => {
                 el.addEventListener('touchstart', (e) => {}, { passive: true });
             });
