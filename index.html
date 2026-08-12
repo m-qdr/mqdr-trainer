@@ -1691,7 +1691,7 @@
                 speak('Сброс');
             }
 
-            // ===== RECORD LAP =====
+            // ===== RECORD LAP (голос — отставание) =====
             function recordLap() {
                 if (!isRunning) {
                     debugInfo.textContent = '⚠️ Гонка не активна. Нажмите «Старт».';
@@ -1718,10 +1718,15 @@
                 debugInfo.textContent = `✅ Круг #${laps.length} зафиксирован (${formatTime(lapTime)})`;
                 beepShort();
 
-                speak(`Круг ${laps.length}, время ${formatTime(lapTime)}`);
-
-                if (isNewBest) {
-                    speak('Новый лучший круг!');
+                // Голос: отставание от лучшего круга
+                if (voiceEnabled) {
+                    const bestOverall = Math.min(...laps);
+                    const delta = lapTime - bestOverall;
+                    if (isNewBest) {
+                        speak('Новый лучший круг!');
+                    } else {
+                        speak(`Круг ${laps.length}, отставание +${formatTime(delta)}`);
+                    }
                 }
 
                 updateRadioStatus();
