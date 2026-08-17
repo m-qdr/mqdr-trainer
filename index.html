@@ -949,6 +949,85 @@
 
     <script>
         // ============================================================
+        //  SERVICE WORKER (offline support)
+        // ============================================================
+        (function registerSW() {
+            if ('serviceWorker' in navigator) {
+                // Создаём Service Worker из строки
+                const swCode = `
+                    const CACHE_NAME = 'mqdr-cache-v1';
+                    const urlsToCache = [
+                        '.',
+                        // манифест и иконки встроены в HTML, поэтому кешируем текущую страницу
+                    ];
+
+                    self.addEventListener('install', function(event) {
+                        event.waitUntil(
+                            caches.open(CACHE_NAME)
+                                .then(function(cache) {
+                                    // Кешируем текущую страницу (сам HTML)
+                                    return cache.addAll([
+                                        '.'
+                                    ]);
+                                })
+                                .then(() => self.skipWaiting())
+                        );
+                    });
+
+                    self.addEventListener('activate', function(event) {
+                        event.waitUntil(
+                            caches.keys().then(function(cacheNames) {
+                                return Promise.all(
+                                    cacheNames.filter(function(name) {
+                                        return name !== CACHE_NAME;
+                                    }).map(function(name) {
+                                        return caches.delete(name);
+                                    })
+                                );
+                            }).then(() => self.clients.claim())
+                        );
+                    });
+
+                    self.addEventListener('fetch', function(event) {
+                        event.respondWith(
+                            caches.match(event.request)
+                                .then(function(response) {
+                                    if (response) {
+                                        return response;
+                                    }
+                                    // Если запрос не найден в кеше, пытаемся загрузить из сети
+                                    return fetch(event.request).then(function(networkResponse) {
+                                        // Если это успешный ответ, кешируем его для будущего использования
+                                        if (networkResponse && networkResponse.status === 200) {
+                                            const responseClone = networkResponse.clone();
+                                            caches.open(CACHE_NAME).then(function(cache) {
+                                                cache.put(event.request, responseClone);
+                                            });
+                                        }
+                                        return networkResponse;
+                                    }).catch(function() {
+                                        // Если нет сети и нет кеша — можно показать fallback, но у нас нет
+                                        return new Response('Offline', { status: 503 });
+                                    });
+                                })
+                        );
+                    });
+                `;
+
+                const blob = new Blob([swCode], { type: 'application/javascript' });
+                const swUrl = URL.createObjectURL(blob);
+
+                navigator.serviceWorker.register(swUrl)
+                    .then(function(registration) {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                    })
+                    .catch(function(err) {
+                        console.log('Service Worker registration failed:', err);
+                    });
+            }
+        })();
+
+        // ============================================================
         //  PWA MANIFEST GENERATION
         // ============================================================
         (function generateManifest() {
@@ -1966,7 +2045,6 @@
 
             init();
 
-            
             window.__laps = {
                 laps,
                 totalElapsed,
