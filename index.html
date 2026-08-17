@@ -45,6 +45,35 @@
             position: relative;
         }
 
+        /* ===== OFFLINE STATUS ===== */
+        .offline-badge {
+            position: fixed;
+            top: 12px;
+            right: 12px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(10px);
+            padding: 4px 12px;
+            border-radius: 30px;
+            font-size: 11px;
+            color: #8fa4c0;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            z-index: 1000;
+            display: none;
+            pointer-events: none;
+        }
+
+        .offline-badge.offline {
+            display: block;
+            color: #fbbf24;
+            border-color: rgba(251, 191, 36, 0.2);
+        }
+
+        .offline-badge.online {
+            display: block;
+            color: #3fe8b0;
+            border-color: rgba(63, 232, 176, 0.2);
+        }
+
         /* ===== INSTALL BUTTON ===== */
         .install-btn {
             position: fixed;
@@ -761,6 +790,10 @@
                 font-size: 18px;
                 right: 4px;
             }
+            .offline-badge {
+                font-size: 10px;
+                padding: 2px 10px;
+            }
         }
 
         @media (max-width: 360px) {
@@ -816,10 +849,17 @@
                 font-size: 16px;
                 right: 4px;
             }
+            .offline-badge {
+                font-size: 9px;
+                padding: 2px 8px;
+            }
         }
     </style>
 </head>
 <body>
+    <!-- Offline status badge -->
+    <div class="offline-badge" id="offlineBadge">● Онлайн</div>
+
     <div class="app" id="app">
         <div class="header">
             <div class="header-left">
@@ -953,79 +993,106 @@
         // ============================================================
         (function registerSW() {
             if ('serviceWorker' in navigator) {
-                // Создаём Service Worker из строки
-                const swCode = `
-                    const CACHE_NAME = 'mqdr-cache-v1';
-                    const urlsToCache = [
-                        '.',
-                        // манифест и иконки встроены в HTML, поэтому кешируем текущую страницу
-                    ];
+                const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+                const isHttps = location.protocol === 'https:';
 
-                    self.addEventListener('install', function(event) {
-                        event.waitUntil(
-                            caches.open(CACHE_NAME)
-                                .then(function(cache) {
-                                    // Кешируем текущую страницу (сам HTML)
-                                    return cache.addAll([
-                                        '.'
-                                    ]);
-                                })
-                                .then(() => self.skipWaiting())
-                        );
-                    });
+                if (isHttps || isLocalhost) {
+                    const swCode = `
+                        const CACHE_NAME = 'mqdr-cache-v1';
+                        const urlsToCache = ['.'];
 
-                    self.addEventListener('activate', function(event) {
-                        event.waitUntil(
-                            caches.keys().then(function(cacheNames) {
-                                return Promise.all(
-                                    cacheNames.filter(function(name) {
-                                        return name !== CACHE_NAME;
-                                    }).map(function(name) {
-                                        return caches.delete(name);
+                        self.addEventListener('install', function(event) {
+                            event.waitUntil(
+                                caches.open(CACHE_NAME)
+                                    .then(function(cache) {
+                                        console.log('Cache opened');
+                                        return cache.addAll(urlsToCache);
                                     })
-                                );
-                            }).then(() => self.clients.claim())
-                        );
-                    });
+                                    .then(function() {
+                                        return self.skipWaiting();
+                                    })
+                            );
+                        });
 
-                    self.addEventListener('fetch', function(event) {
-                        event.respondWith(
-                            caches.match(event.request)
-                                .then(function(response) {
-                                    if (response) {
-                                        return response;
-                                    }
-                                    // Если запрос не найден в кеше, пытаемся загрузить из сети
-                                    return fetch(event.request).then(function(networkResponse) {
-                                        // Если это успешный ответ, кешируем его для будущего использования
-                                        if (networkResponse && networkResponse.status === 200) {
-                                            const responseClone = networkResponse.clone();
-                                            caches.open(CACHE_NAME).then(function(cache) {
-                                                cache.put(event.request, responseClone);
-                                            });
-                                        }
-                                        return networkResponse;
-                                    }).catch(function() {
-                                        // Если нет сети и нет кеша — можно показать fallback, но у нас нет
-                                        return new Response('Offline', { status: 503 });
-                                    });
+                        self.addEventListener('activate', function(event) {
+                            event.waitUntil(
+                                caches.keys().then(function(cacheNames) {
+                                    return Promise.all(
+                                        cacheNames.map(function(cacheName) {
+                                            if (cacheName !== CACHE_NAME) {
+                                                console.log('Deleting old cache:', cacheName);
+                                                return caches.delete(cacheName);
+                                            }
+                                        })
+                                    );
+                                }).then(function() {
+                                    return self.clients.claim();
                                 })
-                        );
-                    });
-                `;
+                            );
+                        });
 
-                const blob = new Blob([swCode], { type: 'application/javascript' });
-                const swUrl = URL.createObjectURL(blob);
+                        self.addEventListener('fetch', function(event) {
+                            event.respondWith(
+                                caches.match(event.request)
+                                    .then(function(response) {
+                                        if (response) {
+                                            return response;
+                                        }
+                                        return fetch(event.request).then(function(networkResponse) {
+                                            if (networkResponse && networkResponse.status === 200) {
+                                                const responseClone = networkResponse.clone();
+                                                caches.open(CACHE_NAME).then(function(cache) {
+                                                    cache.put(event.request, responseClone);
+                                                });
+                                            }
+                                            return networkResponse;
+                                        }).catch(function() {
+                                            return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+                                        });
+                                    })
+                            );
+                        });
+                    `;
 
-                navigator.serviceWorker.register(swUrl)
-                    .then(function(registration) {
-                        console.log('Service Worker registered with scope:', registration.scope);
-                    })
-                    .catch(function(err) {
-                        console.log('Service Worker registration failed:', err);
-                    });
+                    const blob = new Blob([swCode], { type: 'application/javascript' });
+                    const swUrl = URL.createObjectURL(blob);
+
+                    navigator.serviceWorker.register(swUrl)
+                        .then(function(registration) {
+                            console.log('Service Worker registered with scope:', registration.scope);
+                            // Обновляем статус
+                            updateOfflineStatus();
+                        })
+                        .catch(function(err) {
+                            console.log('Service Worker registration failed:', err);
+                        });
+                } else {
+                    console.warn('Service Worker requires HTTPS or localhost. Offline mode not available.');
+                }
+            } else {
+                console.warn('Service Worker not supported in this browser.');
             }
         })();
+
+        // ============================================================
+        //  OFFLINE STATUS INDICATOR
+        // ============================================================
+        function updateOfflineStatus() {
+            const badge = document.getElementById('offlineBadge');
+            if (!badge) return;
+            if (!navigator.onLine) {
+                badge.textContent = '● Офлайн';
+                badge.className = 'offline-badge offline';
+            } else {
+                badge.textContent = '● Онлайн';
+                badge.className = 'offline-badge online';
+            }
+        }
+
+        window.addEventListener('online', updateOfflineStatus);
+        window.addEventListener('offline', updateOfflineStatus);
+        // Проверяем при загрузке
+        setTimeout(updateOfflineStatus, 1000);
 
         // ============================================================
         //  PWA MANIFEST GENERATION
