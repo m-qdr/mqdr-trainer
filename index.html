@@ -989,7 +989,7 @@
 
     <script>
         // ============================================================
-        //  SERVICE WORKER (offline support)
+        //  SERVICE WORKER (network-first strategy)
         // ============================================================
         (function registerSW() {
             if ('serviceWorker' in navigator) {
@@ -997,16 +997,17 @@
                 const isHttps = location.protocol === 'https:';
 
                 if (isHttps || isLocalhost) {
+                    const CACHE_NAME = 'mqdr-cache-v2';
                     const swCode = `
-                        const CACHE_NAME = 'mqdr-cache-v1';
-                        const urlsToCache = ['.'];
+                        const CACHE_NAME = '${CACHE_NAME}';
 
                         self.addEventListener('install', function(event) {
                             event.waitUntil(
                                 caches.open(CACHE_NAME)
                                     .then(function(cache) {
                                         console.log('Cache opened');
-                                        return cache.addAll(urlsToCache);
+                                        // Кешируем только текущую страницу при установке
+                                        return cache.addAll(['.']);
                                     })
                                     .then(function() {
                                         return self.skipWaiting();
@@ -1032,23 +1033,29 @@
                         });
 
                         self.addEventListener('fetch', function(event) {
+                            // Стратегия: сначала сеть, при ошибке — кеш
                             event.respondWith(
-                                caches.match(event.request)
-                                    .then(function(response) {
-                                        if (response) {
-                                            return response;
+                                fetch(event.request)
+                                    .then(function(networkResponse) {
+                                        // Если ответ успешный, обновляем кеш
+                                        if (networkResponse && networkResponse.status === 200) {
+                                            const responseClone = networkResponse.clone();
+                                            caches.open(CACHE_NAME).then(function(cache) {
+                                                cache.put(event.request, responseClone);
+                                            });
                                         }
-                                        return fetch(event.request).then(function(networkResponse) {
-                                            if (networkResponse && networkResponse.status === 200) {
-                                                const responseClone = networkResponse.clone();
-                                                caches.open(CACHE_NAME).then(function(cache) {
-                                                    cache.put(event.request, responseClone);
-                                                });
-                                            }
-                                            return networkResponse;
-                                        }).catch(function() {
-                                            return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-                                        });
+                                        return networkResponse;
+                                    })
+                                    .catch(function() {
+                                        // Если сеть недоступна, пытаемся взять из кеша
+                                        return caches.match(event.request)
+                                            .then(function(cachedResponse) {
+                                                if (cachedResponse) {
+                                                    return cachedResponse;
+                                                }
+                                                // Если и в кеше нет, возвращаем fallback (но у нас его нет)
+                                                return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
+                                            });
                                     })
                             );
                         });
