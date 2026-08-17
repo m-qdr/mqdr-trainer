@@ -45,35 +45,6 @@
             position: relative;
         }
 
-        /* ===== OFFLINE STATUS ===== */
-        .offline-badge {
-            position: fixed;
-            top: 12px;
-            right: 12px;
-            background: rgba(0, 0, 0, 0.7);
-            backdrop-filter: blur(10px);
-            padding: 4px 12px;
-            border-radius: 30px;
-            font-size: 11px;
-            color: #8fa4c0;
-            border: 1px solid rgba(255, 255, 255, 0.05);
-            z-index: 1000;
-            display: none;
-            pointer-events: none;
-        }
-
-        .offline-badge.offline {
-            display: block;
-            color: #fbbf24;
-            border-color: rgba(251, 191, 36, 0.2);
-        }
-
-        .offline-badge.online {
-            display: block;
-            color: #3fe8b0;
-            border-color: rgba(63, 232, 176, 0.2);
-        }
-
         /* ===== INSTALL BUTTON ===== */
         .install-btn {
             position: fixed;
@@ -790,10 +761,6 @@
                 font-size: 18px;
                 right: 4px;
             }
-            .offline-badge {
-                font-size: 10px;
-                padding: 2px 10px;
-            }
         }
 
         @media (max-width: 360px) {
@@ -849,17 +816,10 @@
                 font-size: 16px;
                 right: 4px;
             }
-            .offline-badge {
-                font-size: 9px;
-                padding: 2px 8px;
-            }
         }
     </style>
 </head>
 <body>
-    <!-- Offline status badge -->
-    <div class="offline-badge" id="offlineBadge">● Онлайн</div>
-
     <div class="app" id="app">
         <div class="header">
             <div class="header-left">
@@ -988,119 +948,6 @@
     </button>
 
     <script>
-        // ============================================================
-        //  SERVICE WORKER (network-first strategy)
-        // ============================================================
-        (function registerSW() {
-            if ('serviceWorker' in navigator) {
-                const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-                const isHttps = location.protocol === 'https:';
-
-                if (isHttps || isLocalhost) {
-                    const CACHE_NAME = 'mqdr-cache-v2';
-                    const swCode = `
-                        const CACHE_NAME = '${CACHE_NAME}';
-
-                        self.addEventListener('install', function(event) {
-                            event.waitUntil(
-                                caches.open(CACHE_NAME)
-                                    .then(function(cache) {
-                                        console.log('Cache opened');
-                                        // Кешируем только текущую страницу при установке
-                                        return cache.addAll(['.']);
-                                    })
-                                    .then(function() {
-                                        return self.skipWaiting();
-                                    })
-                            );
-                        });
-
-                        self.addEventListener('activate', function(event) {
-                            event.waitUntil(
-                                caches.keys().then(function(cacheNames) {
-                                    return Promise.all(
-                                        cacheNames.map(function(cacheName) {
-                                            if (cacheName !== CACHE_NAME) {
-                                                console.log('Deleting old cache:', cacheName);
-                                                return caches.delete(cacheName);
-                                            }
-                                        })
-                                    );
-                                }).then(function() {
-                                    return self.clients.claim();
-                                })
-                            );
-                        });
-
-                        self.addEventListener('fetch', function(event) {
-                            // Стратегия: сначала сеть, при ошибке — кеш
-                            event.respondWith(
-                                fetch(event.request)
-                                    .then(function(networkResponse) {
-                                        // Если ответ успешный, обновляем кеш
-                                        if (networkResponse && networkResponse.status === 200) {
-                                            const responseClone = networkResponse.clone();
-                                            caches.open(CACHE_NAME).then(function(cache) {
-                                                cache.put(event.request, responseClone);
-                                            });
-                                        }
-                                        return networkResponse;
-                                    })
-                                    .catch(function() {
-                                        // Если сеть недоступна, пытаемся взять из кеша
-                                        return caches.match(event.request)
-                                            .then(function(cachedResponse) {
-                                                if (cachedResponse) {
-                                                    return cachedResponse;
-                                                }
-                                                // Если и в кеше нет, возвращаем fallback (но у нас его нет)
-                                                return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-                                            });
-                                    })
-                            );
-                        });
-                    `;
-
-                    const blob = new Blob([swCode], { type: 'application/javascript' });
-                    const swUrl = URL.createObjectURL(blob);
-
-                    navigator.serviceWorker.register(swUrl)
-                        .then(function(registration) {
-                            console.log('Service Worker registered with scope:', registration.scope);
-                            // Обновляем статус
-                            updateOfflineStatus();
-                        })
-                        .catch(function(err) {
-                            console.log('Service Worker registration failed:', err);
-                        });
-                } else {
-                    console.warn('Service Worker requires HTTPS or localhost. Offline mode not available.');
-                }
-            } else {
-                console.warn('Service Worker not supported in this browser.');
-            }
-        })();
-
-        // ============================================================
-        //  OFFLINE STATUS INDICATOR
-        // ============================================================
-        function updateOfflineStatus() {
-            const badge = document.getElementById('offlineBadge');
-            if (!badge) return;
-            if (!navigator.onLine) {
-                badge.textContent = '● Офлайн';
-                badge.className = 'offline-badge offline';
-            } else {
-                badge.textContent = '● Онлайн';
-                badge.className = 'offline-badge online';
-            }
-        }
-
-        window.addEventListener('online', updateOfflineStatus);
-        window.addEventListener('offline', updateOfflineStatus);
-        // Проверяем при загрузке
-        setTimeout(updateOfflineStatus, 1000);
-
         // ============================================================
         //  PWA MANIFEST GENERATION
         // ============================================================
