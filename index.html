@@ -340,27 +340,8 @@
             font-size: 24px;
             color: #b0e0ff;
             letter-spacing: 1px;
-            text-align: center;
-            flex: 1;
-        }
-
-        .elrs-data .lap-delta {
-            font-size: 20px;
-            font-weight: 500;
-            min-width: 80px;
             text-align: right;
-        }
-
-        .elrs-data .lap-delta.positive {
-            color: #f87171;
-        }
-
-        .elrs-data .lap-delta.negative {
-            color: #3fe8b0;
-        }
-
-        .elrs-data .lap-delta.zero {
-            color: #5f7a9a;
+            flex: 1;
         }
 
         .elrs-backpack .elrs-footer {
@@ -373,7 +354,7 @@
             font-family: 'Courier New', monospace;
         }
 
-        /* ===== LAPS GRID ===== */
+        /* ===== LAPS GRID (среднее меню) ===== */
         .laps-grid {
             display: flex;
             justify-content: space-around;
@@ -402,8 +383,12 @@
             color: #60a5fa;
         }
 
-        .laps-grid .item .value.count {
-            color: #a78bfa;
+        .laps-grid .item .value.gap {
+            color: #f87171;
+        }
+
+        .laps-grid .item .value.gap.zero {
+            color: #5f7a9a;
         }
 
         .laps-grid .item .desc {
@@ -783,10 +768,6 @@
             .elrs-data .lap-time {
                 font-size: 20px;
             }
-            .elrs-data .lap-delta {
-                font-size: 16px;
-                min-width: 60px;
-            }
             .settings-row input[type="range"] {
                 width: 80px;
             }
@@ -840,10 +821,6 @@
             }
             .elrs-data .lap-time {
                 font-size: 16px;
-            }
-            .elrs-data .lap-delta {
-                font-size: 14px;
-                min-width: 50px;
             }
             .lap-item .diff {
                 font-size: 11px;
@@ -906,7 +883,6 @@
             <div class="elrs-data">
                 <span class="lap-number" id="elrsLapNum">--</span>
                 <span class="lap-time" id="elrsLapTime">--:--.--</span>
-                <span class="lap-delta" id="elrsDelta">+0.00</span>
             </div>
             <div class="elrs-footer">
                 <span id="elrsBest">Лучший: --</span>
@@ -919,18 +895,19 @@
             <div class="label" id="timerLabel">ОБЩЕЕ ВРЕМЯ</div>
         </div>
 
+        <!-- Среднее меню: лучший, последний, отставание -->
         <div class="laps-grid">
             <div class="item">
-                <div class="value count" id="lapCount">0</div>
-                <div class="desc">Круги</div>
+                <div class="value best" id="bestLapTime">–</div>
+                <div class="desc">Лучший</div>
             </div>
             <div class="item">
                 <div class="value last" id="lastLapTime">–</div>
                 <div class="desc">Последний</div>
             </div>
             <div class="item">
-                <div class="value best" id="bestLapTime">–</div>
-                <div class="desc">Лучший</div>
+                <div class="value gap" id="gapLapTime">–</div>
+                <div class="desc">Отставание</div>
             </div>
         </div>
 
@@ -1237,9 +1214,6 @@
             // DOM refs
             const totalTimeEl = document.getElementById('totalTime');
             const timerLabel = document.getElementById('timerLabel');
-            const lapCountEl = document.getElementById('lapCount');
-            const lastLapTimeEl = document.getElementById('lastLapTime');
-            const bestLapTimeEl = document.getElementById('bestLapTime');
             const lapListEl = document.getElementById('lapList');
             const statusLabel = document.getElementById('statusLabel');
             const lapBtn = document.getElementById('lapBtn');
@@ -1259,12 +1233,16 @@
             const bestLapsInput = document.getElementById('bestLapsCount');
             const voiceSwitch = document.getElementById('voiceSwitch');
 
+            // Среднее меню
+            const bestLapTimeEl = document.getElementById('bestLapTime');
+            const lastLapTimeEl = document.getElementById('lastLapTime');
+            const gapLapTimeEl = document.getElementById('gapLapTime');
+
             // ELRS elements
             const elrsLed = document.getElementById('elrsLed');
             const elrsStatusText = document.getElementById('elrsStatusText');
             const elrsLapNum = document.getElementById('elrsLapNum');
             const elrsLapTime = document.getElementById('elrsLapTime');
-            const elrsDelta = document.getElementById('elrsDelta');
             const elrsBest = document.getElementById('elrsBest');
             const elrsTotal = document.getElementById('elrsTotal');
             const elrsInfo = document.getElementById('elrsInfo');
@@ -1506,7 +1484,7 @@
                 return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
             }
 
-            // ===== UPDATE ELRS =====
+            // ===== UPDATE ELRS (общее кол-во кругов и таймер текущего круга) =====
             function updateELRS() {
                 const count = laps.length;
                 const totalTimeStr = formatTime(totalElapsed);
@@ -1529,64 +1507,44 @@
                 }
                 elrsInfo.textContent = infoText;
 
-                if (count === 0) {
-                    elrsLapNum.textContent = '--';
-                    elrsLapTime.textContent = '--:--.--';
-                    elrsDelta.textContent = '+0.00';
-                    elrsDelta.className = 'lap-delta zero';
-                    elrsBest.textContent = 'Лучший: --';
-                    elrsTotal.textContent = 'Всего: 0';
-                    elrsLed.className = 'led';
-                    elrsStatusText.textContent = isRunning ? 'Гонка' : (isCountdown ? 'Старт' : 'Ожидание');
-                    if (isRunning) {
-                        elrsLed.className = 'led active';
-                        elrsStatusText.textContent = 'Гонка';
-                    } else if (isCountdown) {
-                        elrsLed.className = 'led';
-                        elrsStatusText.textContent = 'Старт';
-                    } else {
-                        elrsLed.className = 'led';
-                        elrsStatusText.textContent = 'Ожидание';
-                    }
-                    return;
-                }
+                // Количество кругов (всего)
+                elrsLapNum.textContent = count > 0 ? `#${count}` : '--';
 
-                const last = laps[count - 1];
-                elrsLapNum.textContent = `#${count}`;
-                elrsLapTime.textContent = formatTime(last);
+                // Таймер текущего круга
+                let currentLapTime = 0;
+                if (isRunning && count > 0) {
+                    currentLapTime = performance.now() - lapStartTime;
+                } else if (count > 0) {
+                    // Гонка остановлена — показываем время последнего круга
+                    currentLapTime = laps[count - 1];
+                } else {
+                    currentLapTime = 0;
+                }
+                if (currentLapTime < 0) currentLapTime = 0;
+                elrsLapTime.textContent = formatTime(currentLapTime);
 
                 // Вычисляем лучший круг
-                const bestOverall = Math.min(...laps);
-
-                // Дельта от лучшего
-                const delta = last - bestOverall;
-                let deltaStr = '+0.00';
-                let deltaClass = 'lap-delta zero';
-                if (delta === 0) {
-                    deltaStr = '0.00';
-                    deltaClass = 'lap-delta zero';
-                } else {
-                    deltaStr = `+${formatTime(delta)}`;
-                    deltaClass = 'lap-delta positive';
-                }
-                elrsDelta.textContent = deltaStr;
-                elrsDelta.className = deltaClass;
+                const bestOverall = count > 0 ? Math.min(...laps) : 0;
 
                 // Вычисляем среднее за N лучших кругов
-                const sorted = [...laps].sort((a, b) => a - b);
-                const take = Math.min(bestLapsCount, sorted.length);
-                const bestLaps = sorted.slice(0, take);
-                const avg = bestLaps.reduce((s, v) => s + v, 0) / take;
-
                 let bestText = '';
-                if (take === 1) {
-                    bestText = `Лучший: ${formatTime(bestOverall)}`;
+                if (count === 0) {
+                    bestText = 'Лучший: --';
                 } else {
-                    bestText = `Среднее за ${take}: ${formatTime(avg)}`;
+                    const sorted = [...laps].sort((a, b) => a - b);
+                    const take = Math.min(bestLapsCount, sorted.length);
+                    const bestLaps = sorted.slice(0, take);
+                    const avg = bestLaps.reduce((s, v) => s + v, 0) / take;
+                    if (take === 1) {
+                        bestText = `Лучший: ${formatTime(bestOverall)}`;
+                    } else {
+                        bestText = `Среднее за ${take}: ${formatTime(avg)}`;
+                    }
                 }
                 elrsBest.textContent = bestText;
                 elrsTotal.textContent = `Всего: ${count}`;
 
+                // LED статус
                 if (isRunning) {
                     elrsLed.className = 'led active';
                     elrsStatusText.textContent = 'В гонке';
@@ -1596,23 +1554,47 @@
                 }
             }
 
+            // ===== UPDATE MIDDLE GRID =====
+            function updateMiddleGrid() {
+                const count = laps.length;
+                if (count === 0) {
+                    bestLapTimeEl.textContent = '–';
+                    lastLapTimeEl.textContent = '–';
+                    gapLapTimeEl.textContent = '–';
+                    gapLapTimeEl.className = 'value gap';
+                    return;
+                }
+
+                const bestOverall = Math.min(...laps);
+                const last = laps[count - 1];
+
+                bestLapTimeEl.textContent = formatTime(bestOverall);
+                bestLapTimeEl.className = 'value best';
+
+                lastLapTimeEl.textContent = formatTime(last);
+                lastLapTimeEl.className = 'value last';
+
+                // Отставание последнего круга от лучшего
+                const gap = last - bestOverall;
+                let gapText = '';
+                let gapClass = 'value gap';
+                if (gap === 0) {
+                    gapText = '0.00';
+                    gapClass = 'value gap zero';
+                } else {
+                    gapText = `+${formatTime(gap)}`;
+                    gapClass = 'value gap';
+                }
+                gapLapTimeEl.textContent = gapText;
+                gapLapTimeEl.className = gapClass;
+            }
+
             // ===== UPDATE DISPLAYS =====
             function updateDisplays() {
                 totalTimeEl.textContent = formatTime(totalElapsed);
-                lapCountEl.textContent = laps.length;
-                if (laps.length > 0) {
-                    lastLapTimeEl.textContent = formatTime(laps[laps.length - 1]);
-                } else {
-                    lastLapTimeEl.textContent = '–';
-                }
-                if (laps.length > 0) {
-                    const best = Math.min(...laps);
-                    bestLapTimeEl.textContent = formatTime(best);
-                } else {
-                    bestLapTimeEl.textContent = '–';
-                }
                 renderLapList();
                 updateELRS();
+                updateMiddleGrid();
 
                 if (isCountdown) {
                     statusLabel.textContent = `● СТАРТ ${countdownSeconds}s`;
