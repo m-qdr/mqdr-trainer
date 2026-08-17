@@ -699,6 +699,20 @@
             color: #fbbf24;
         }
 
+        .lap-item .delete-btn {
+            color: #5f7a9a;
+            cursor: pointer;
+            margin-left: 8px;
+            font-size: 14px;
+            transition: color 0.2s;
+            padding: 0 4px;
+            line-height: 1;
+        }
+
+        .lap-item .delete-btn:hover {
+            color: #f87171;
+        }
+
         .empty-laps {
             text-align: center;
             color: #3f556e;
@@ -749,6 +763,10 @@
             .lap-item .diff {
                 font-size: 12px;
                 min-width: 50px;
+            }
+            .lap-item .delete-btn {
+                font-size: 12px;
+                margin-left: 4px;
             }
             .settings-row {
                 padding: 6px 12px;
@@ -830,6 +848,10 @@
             .lap-item .diff {
                 font-size: 11px;
                 min-width: 40px;
+            }
+            .lap-item .delete-btn {
+                font-size: 11px;
+                margin-left: 4px;
             }
             .settings-row input[type="range"] {
                 width: 60px;
@@ -997,7 +1019,7 @@
                 const isHttps = location.protocol === 'https:';
 
                 if (isHttps || isLocalhost) {
-                    const CACHE_NAME = 'mqdr-cache-v3';
+                    const CACHE_NAME = 'mqdr-cache-v4';
                     const swCode = `
                         const CACHE_NAME = '${CACHE_NAME}';
                         const urlsToCache = ['.'];
@@ -1624,7 +1646,7 @@
                 stopBtn.disabled = !isRunning && !isCountdown;
             }
 
-            // ===== RENDER LAP LIST (новые круги сверху) =====
+            // ===== RENDER LAP LIST (новые круги сверху, с кнопкой удаления) =====
             function renderLapList() {
                 if (laps.length === 0) {
                     lapListEl.innerHTML = '<div class="empty-laps">Нет кругов</div>';
@@ -1649,15 +1671,38 @@
                     }
                     const lapNumber = i + 1;
                     html += `
-                                <div class="lap-item ${isBest ? 'best' : ''}">
+                                <div class="lap-item ${isBest ? 'best' : ''}" data-index="${i}">
                                     <span class="idx">#${lapNumber}</span>
                                     <span class="time">${formatTime(lapTime)}</span>
                                     <span class="diff ${diffClass}">${diffStr}</span>
+                                    <span class="delete-btn" title="Удалить круг">✕</span>
                                 </div>
                             `;
                 }
                 lapListEl.innerHTML = html;
                 lapListEl.scrollTop = 0;
+            }
+
+            // ===== REMOVE LAP =====
+            function removeLap(index) {
+                if (index < 0 || index >= laps.length) return;
+
+                // Удаляем круг из массива
+                laps.splice(index, 1);
+
+                // Пересчитываем totalElapsed
+                const sum = laps.reduce((a, b) => a + b, 0);
+                if (isRunning) {
+                    totalElapsed = sum + (performance.now() - lapStartTime);
+                    // Сбрасываем lastTimestamp, чтобы избежать скачка
+                    lastTimestamp = 0;
+                } else {
+                    totalElapsed = sum;
+                }
+
+                // Обновляем отображение
+                updateDisplays();
+                debugInfo.textContent = `🗑️ Круг #${index+1} удалён`;
             }
 
             // ===== TIMER LOOP =====
@@ -2051,10 +2096,25 @@
                 }, { passive: false });
             }
 
+            // ===== DELETE BUTTON EVENT LISTENER =====
+            function setupDeleteListener() {
+                lapListEl.addEventListener('click', function(e) {
+                    const target = e.target.closest('.delete-btn');
+                    if (!target) return;
+                    const item = target.closest('.lap-item');
+                    if (!item) return;
+                    const index = parseInt(item.dataset.index, 10);
+                    if (!isNaN(index)) {
+                        removeLap(index);
+                    }
+                });
+            }
+
             // ===== INIT =====
             function init() {
                 resetAll();
                 setupScreenButton();
+                setupDeleteListener();
                 pollGamepad();
                 scanGamepads();
                 window.addEventListener('gamepadconnected', (e) => {
@@ -2121,6 +2181,7 @@
                 stopTimer,
                 resetAll,
                 recordLap,
+                removeLap,
                 gamepadConnected,
                 scanGamepads,
                 stopWithTripleBeep,
