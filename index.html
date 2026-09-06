@@ -12,9 +12,10 @@
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="theme-color" content="#0e1118" />
     <meta name="background-color" content="#0e1118" />
-
-    <!-- Статический манифест с описанием и иконками -->
-    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1RRFIgVHJhaW5lciIsCiAgInNob3J0X25hbWUiOiAiTVFEUiBUcmFpbmVyIiwKICAiZGVzY3JpcHRpb24iOiAi0KLQtdC70LXQvNC10YDRj9GMINC00LvRjyDQt9Cw0YHQtdGH0LrQuCDQutGA0YPQs9C+0LIg0LAg0L/QvtC00L/QtdGA0LbQutC4INCz0L7QvdC+0Log0L3QsCDRgdC40LzRg9C70Y/RgtC+0YDQtS4iLAogICJjYXRlZ29yaWVzIjogWyJzcG9ydHMiLCAidXRpbGl0eSJdLAogICJsYW5nIjogInJ1IiwKICAiZGlyIjogImx0ciIsCiAgInN0YXJ0X3VybCI6ICIuIiwKICAic2NvcGUiOiAiLiIsCiAgImRpc3BsYXkiOiAic3RhbmRhbG9uZSIsCiAgImJhY2tncm91bmRfY29sb3IiOiAiIzBlMTExOCIsCiAgInRoZW1lX2NvbG9yIjogIiMwZGYzZjAiLAogICJvcmllbnRhdGlvbiI6ICJwb3J0cmFpdCIsCiAgImljb25zIjogWwogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbCwlM0NzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgMTkyIDE5MiclM0UlM0NyZWN0IHdpZHRoPScxOTInIGhlaWdodD0nMTkyJyBmaWxsPSclMjMwZTExMTgnLyUzRSUzQ3RleHQgeD0nOTYnIHk9JzgyJyBmb250LXNpemU9JzM0JyB0ZXh0LWFuY2hvcj0nbWlkZGxlJyBmaWxsPSclMjMwZGYzZjAnIGZvbnQtZmFtaWx5PSdzYW5zLXNlcmlmJyBmb250LXdlaWdodD0nYm9sZCclM0VNUURSJTNDL3RleHQlM0UlM0N0ZXh0IHg9Jzk2JyB5PScxMjInIGZvbnQtc2l6ZT0nMzAnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGZpbGw9JyUyMzBkZjNmMCcgZm9udC1mYW1pbHk9J3NhbnMtc2VyaWYnIGZvbnQtd2VpZ2h0PSdib2xkJyUzRUxBUFMlM0MvdGV4dCUzRSUzQy9zdmclM0UiLAogICAgICAic2l6ZXMiOiAiMTkyeDE5MiIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiCiAgICB9LAogICAgewogICAgICAic3JjIjogImRhdGE6aW1hZ2Uvc3ZnK3htbCwlM0NzdmcgeG1sbnM9J2h0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnJyB2aWV3Qm94PScwIDAgNTEyIDUxMiclM0UlM0NyZWN0IHdpZHRoPSc1MTInIGhlaWdodD0nNTEyJyBmaWxsPSclMjMwZTExMTgnLyUzRSUzQ3RleHQgeD0nMjU2JyB5PScyMjAnIGZvbnQtc2l6ZT0nOTAnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGZpbGw9JyUyMzBkZjNmMCcgZm9udC1mYW1pbHk9J3NhbnMtc2VyaWYnIGZvbnQtd2VpZ2h0PSdib2xkJyUzRU1RRFIlM0MvdGV4dCUzRSUzQ3RleHQgeD0nMjU2JyB5PSczMjAnIGZvbnQtc2l6ZT0nODAnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGZpbGw9JyUyMzBkZjNmMCcgZm9udC1mYW1pbHk9J3NhbnMtc2VyaWYnIGZvbnQtd2VpZ2h0PSdib2xkJyUzRUxBUFMlM0MvdGV4dCUzRSUzQy9zdmclM0UiLAogICAgICAic2l6ZXMiOiAiNTEyeDUxMiIsCiAgICAgICJ0eXBlIjogImltYWdlL3N2Zyt4bWwiLAogICAgICAicHVycG9zZSI6ICJhbnkgbWFza2FibGUiCiAgICB9CiAgXQp9" />
+    <!-- PWA: манифест и иконки (реальные файлы для офлайн-установки) -->
+    <link rel="manifest" href="manifest.json" />
+    <link rel="icon" type="image/svg+xml" href="icons/icon.svg" />
+    <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
 
     <style>
         /* ===== RESET & BASE ===== */
@@ -994,86 +995,27 @@
         //  SERVICE WORKER (offline support)
         // ============================================================
         (function registerSW() {
-            if ('serviceWorker' in navigator) {
-                const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
-                const isHttps = location.protocol === 'https:';
-
-                if (isHttps || isLocalhost) {
-                    const CACHE_NAME = 'mqdr-cache-v5';
-                    const swCode = `
-                        const CACHE_NAME = '${CACHE_NAME}';
-                        const urlsToCache = ['.'];
-
-                        self.addEventListener('install', function(event) {
-                            event.waitUntil(
-                                caches.open(CACHE_NAME)
-                                    .then(function(cache) {
-                                        console.log('Cache opened');
-                                        return cache.addAll(urlsToCache);
-                                    })
-                                    .then(function() {
-                                        return self.skipWaiting();
-                                    })
-                            );
-                        });
-
-                        self.addEventListener('activate', function(event) {
-                            event.waitUntil(
-                                caches.keys().then(function(cacheNames) {
-                                    return Promise.all(
-                                        cacheNames.map(function(cacheName) {
-                                            if (cacheName !== CACHE_NAME) {
-                                                console.log('Deleting old cache:', cacheName);
-                                                return caches.delete(cacheName);
-                                            }
-                                        })
-                                    );
-                                }).then(function() {
-                                    return self.clients.claim();
-                                })
-                            );
-                        });
-
-                        self.addEventListener('fetch', function(event) {
-                            event.respondWith(
-                                caches.match(event.request)
-                                    .then(function(response) {
-                                        if (response) {
-                                            return response;
-                                        }
-                                        return fetch(event.request).then(function(networkResponse) {
-                                            if (networkResponse && networkResponse.status === 200) {
-                                                const responseClone = networkResponse.clone();
-                                                caches.open(CACHE_NAME).then(function(cache) {
-                                                    cache.put(event.request, responseClone);
-                                                });
-                                            }
-                                            return networkResponse;
-                                        }).catch(function() {
-                                            return new Response('Offline', { status: 503, statusText: 'Service Unavailable' });
-                                        });
-                                    })
-                            );
-                        });
-                    `;
-
-                    const blob = new Blob([swCode], { type: 'application/javascript' });
-                    const swUrl = URL.createObjectURL(blob);
-
-                    navigator.serviceWorker.register(swUrl)
-                        .then(function(registration) {
-                            console.log('Service Worker registered with scope:', registration.scope);
-                            updateOfflineStatus();
-                        })
-                        .catch(function(err) {
-                            console.log('Service Worker registration failed:', err);
-                        });
-                } else {
-                    console.warn('Service Worker requires HTTPS or localhost. Offline mode not available.');
-                }
-            } else {
+            if (!('serviceWorker' in navigator)) {
                 console.warn('Service Worker not supported in this browser.');
+                return;
             }
+
+            const isLocalhost = location.hostname === 'localhost' || location.hostname === '127.0.0.1';
+            if (location.protocol !== 'https:' && !isLocalhost) {
+                console.warn('Service Worker requires HTTPS or localhost. Offline mode not available.');
+                return;
+            }
+
+            window.addEventListener('load', function () {
+                navigator.serviceWorker.register('sw.js')
+                    .then(function (registration) {
+                        console.log('Service Worker registered with scope:', registration.scope);
+                        updateOfflineStatus();
+                    })
+                    .catch(function (err) {
+                        console.log('Service Worker registration failed:', err);
+                    });
+            });
         })();
 
         // ============================================================
@@ -1094,44 +1036,6 @@
         window.addEventListener('online', updateOfflineStatus);
         window.addEventListener('offline', updateOfflineStatus);
         setTimeout(updateOfflineStatus, 1000);
-
-        // ============================================================
-        //  PWA MANIFEST GENERATION (fallback with correct logo)
-        // ============================================================
-        (function generateManifest() {
-            const manifest = {
-                name: "MQDR Trainer",
-                short_name: "MQDR Trainer",
-                description: "Тренируй засечку кругов для гонок дронов на симуляторе.",
-                categories: ["sports", "utility"],
-                lang: "ru",
-                dir: "ltr",
-                start_url: ".",
-                scope: ".",
-                display: "standalone",
-                background_color: "#0e1118",
-                theme_color: "#0df3f0",
-                orientation: "portrait",
-                icons: [{
-                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%230e1118'/%3E%3Ctext x='96' y='82' font-size='34' text-anchor='middle' fill='%230df3f0' font-family='sans-serif' font-weight='bold'%3EMQDR%3C/text%3E%3Ctext x='96' y='122' font-size='30' text-anchor='middle' fill='%230df3f0' font-family='sans-serif' font-weight='bold'%3ELAPS%3C/text%3E%3C/svg%3E",
-                    sizes: "192x192",
-                    type: "image/svg+xml"
-                }, {
-                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230e1118'/%3E%3Ctext x='256' y='220' font-size='90' text-anchor='middle' fill='%230df3f0' font-family='sans-serif' font-weight='bold'%3EMQDR%3C/text%3E%3Ctext x='256' y='320' font-size='80' text-anchor='middle' fill='%230df3f0' font-family='sans-serif' font-weight='bold'%3ELAPS%3C/text%3E%3C/svg%3E",
-                    sizes: "512x512",
-                    type: "image/svg+xml",
-                    purpose: "any maskable"
-                }]
-            };
-
-            const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-
-            const link = document.createElement('link');
-            link.rel = 'manifest';
-            link.href = url;
-            document.head.appendChild(link);
-        })();
 
         // ============================================================
         //  INSTALL BUTTON LOGIC (with close)
