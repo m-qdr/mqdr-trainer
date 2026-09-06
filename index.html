@@ -13,6 +13,9 @@
     <meta name="theme-color" content="#0e1118" />
     <meta name="background-color" content="#0e1118" />
 
+    <!-- Static Manifest (standalone) -->
+    <link rel="manifest" href="data:application/json;base64,ewogICJuYW1lIjogIk1RRFIgVHJhaW5lciIsCiAgInNob3J0X25hbWUiOiAiTVFEUiBUcmFpbmVyIiwKICAic3RhcnRfdXJsIjogIi4iLAogICJzY29wZSI6ICIuIiwKICAiZGlzcGxheSI6ICJzdGFuZGFsb25lIiwKICAiYmFja2dyb3VuZF9jb2xvciI6ICIjMGUxMTE4IiwKICAidGhlbWVfY29sb3IiOiAiIzBkZjNmMCIsCiAgIm9yaWVudGF0aW9uIjogInBvcnRyYWl0IiwKICAiaWNvbnMiOiBbCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCAxOTIgMTkyJyUzRSUzQ3JlY3Qgd2lkdGg9JzE5MicgaGVpZ2h0PScxOTInIGZpbGw9JyUyMzBlMTExOCcvJTNFJTNDdGV4dCB4PSc5NicgeT0nODInIGZvbnQtc2l6ZT0nMzQnIHRleHQtYW5jaG9yPSdtaWRkbGUnIGZpbGw9JyUyMzBkZjNmMCcgZm9udC1mYW1pbHk9J3NhbnMtc2VyaWYnIGZvbnQtd2VpZ2h0PSdib2xkJyUzRU1RRFIlM0MvdGV4dCUzRSUzQ3RleHQgeD0nOTYnIHk9JzEyMicgZm9udC1zaXplPSczMCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nJTIzMGRmM2YwJyBmb250LWZhbWlseT0nc2Fucy1zZXJpZicgZm9udC13ZWlnaHQ9J2JvbGQnJTNFVklDTCUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsCiAgICAgICJzaXplcyI6ICIxOTJ4MTkyIiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIKICAgIH0sCiAgICB7CiAgICAgICJzcmMiOiAiZGF0YTppbWFnZS9zdmcreG1sLCUzQ3N2ZyB4bWxucz0naHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmcnIHZpZXdCb3g9JzAgMCA1MTIgNTEyJyUzRSUzQ3JlY3Qgd2lkdGg9JzUxMicgaGVpZ2h0PSc1MTInIGZpbGw9JyUyMzBlMTExOCcvJTNFJTNDdGV4dCB4PScyNTYnIHk9JzIyMCcgZm9udC1zaXplPSc5MCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nJTIzMGRmM2YwJyBmb250LWZhbWlseT0nc2Fucy1zZXJpZicgZm9udC13ZWlnaHQ9J2JvbGQnJTNFVklDTCUzQy90ZXh0JTNFJTNDdGV4dCB4PScyNTYnIHk9JzMyMCcgZm9udC1zaXplPSc4MCcgdGV4dC1hbmNob3I9J21pZGRsZScgZmlsbD0nJTIzMGRmM2YwJyBmb250LWZhbWlseT0nc2Fucy1zZXJpZicgZm9udC13ZWlnaHQ9J2JvbGQnJTNFUk9UUyUzQy90ZXh0JTNFJTNDL3N2ZyUzRSIsCiAgICAgICJzaXplcyI6ICI1MTJ4NTEyIiwKICAgICAgInR5cGUiOiAiaW1hZ2Uvc3ZnK3htbCIsCiAgICAgICJwdXJwb3NlIjogImFueSBtYXNrYWJsZSIKICAgIH0KICBdCn0=" />
+
     <style>
         /* ===== RESET & BASE ===== */
         * {
@@ -1093,38 +1096,6 @@
         setTimeout(updateOfflineStatus, 1000);
 
         // ============================================================
-        //  PWA MANIFEST GENERATION
-        // ============================================================
-        (function generateManifest() {
-            const manifest = {
-                name: "MQDR Trainer",
-                short_name: "MQDR Trainer",
-                start_url: ".",
-                display: "standalone",
-                background_color: "#0e1118",
-                theme_color: "#0df3f0",
-                icons: [{
-                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 192 192'%3E%3Crect width='192' height='192' fill='%230e1118'/%3E%3Ctext x='96' y='82' font-size='34' text-anchor='middle' fill='%230df3f0' font-family='sans-serif' font-weight='bold'%3EMQDR%3C/text%3E%3Ctext x='96' y='122' font-size='30' text-anchor='middle' fill='%230df3f0' font-family='sans-serif' font-weight='bold'%3ELAPS%3C/text%3E%3C/svg%3E",
-                    sizes: "192x192",
-                    type: "image/svg+xml"
-                }, {
-                    src: "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 512 512'%3E%3Crect width='512' height='512' fill='%230e1118'/%3E%3Ctext x='256' y='220' font-size='90' text-anchor='middle' fill='%230df3f0' font-family='sans-serif' font-weight='bold'%3EMQDR%3C/text%3E%3Ctext x='256' y='320' font-size='80' text-anchor='middle' fill='%230df3f0' font-family='sans-serif' font-weight='bold'%3ELAPS%3C/text%3E%3C/svg%3E",
-                    sizes: "512x512",
-                    type: "image/svg+xml",
-                    purpose: "any maskable"
-                }]
-            };
-
-            const blob = new Blob([JSON.stringify(manifest)], { type: 'application/json' });
-            const url = URL.createObjectURL(blob);
-
-            const link = document.createElement('link');
-            link.rel = 'manifest';
-            link.href = url;
-            document.head.appendChild(link);
-        })();
-
-        // ============================================================
         //  INSTALL BUTTON LOGIC (with close)
         // ============================================================
         (function installButton() {
@@ -1484,7 +1455,7 @@
                 return `${String(minutes).padStart(2, '0')}:${String(seconds).padStart(2, '0')}.${String(centiseconds).padStart(2, '0')}`;
             }
 
-            // ===== UPDATE ELRS (общее кол-во кругов и таймер текущего круга) =====
+            // ===== UPDATE ELRS =====
             function updateELRS() {
                 const count = laps.length;
                 const totalTimeStr = formatTime(totalElapsed);
@@ -1628,7 +1599,7 @@
                 stopBtn.disabled = !isRunning && !isCountdown;
             }
 
-            // ===== RENDER LAP LIST (новые круги сверху, с кнопкой удаления) =====
+            // ===== RENDER LAP LIST =====
             function renderLapList() {
                 if (laps.length === 0) {
                     lapListEl.innerHTML = '<div class="empty-laps">Нет кругов</div>';
@@ -1637,7 +1608,6 @@
 
                 const bestOverall = Math.min(...laps);
                 let html = '';
-                // Проходим от последнего к первому (новые сверху)
                 for (let i = laps.length - 1; i >= 0; i--) {
                     const lapTime = laps[i];
                     const isBest = lapTime === bestOverall;
@@ -1668,21 +1638,14 @@
             // ===== REMOVE LAP =====
             function removeLap(index) {
                 if (index < 0 || index >= laps.length) return;
-
-                // Удаляем круг из массива
                 laps.splice(index, 1);
-
-                // Пересчитываем totalElapsed
                 const sum = laps.reduce((a, b) => a + b, 0);
                 if (isRunning) {
                     totalElapsed = sum + (performance.now() - lapStartTime);
-                    // Сбрасываем lastTimestamp, чтобы избежать скачка
                     lastTimestamp = 0;
                 } else {
                     totalElapsed = sum;
                 }
-
-                // Обновляем отображение
                 updateDisplays();
                 debugInfo.textContent = `🗑️ Круг #${index+1} удалён`;
             }
@@ -1863,7 +1826,7 @@
                 speak('Сброс');
             }
 
-            // ===== RECORD LAP (голос — отставание) =====
+            // ===== RECORD LAP =====
             function recordLap() {
                 if (!isRunning) {
                     debugInfo.textContent = '⚠️ Гонка не активна. Нажмите «Старт».';
@@ -1890,7 +1853,6 @@
                 debugInfo.textContent = `✅ Круг #${laps.length} зафиксирован (${formatTime(lapTime)})`;
                 beepShort();
 
-                // Голос: отставание от лучшего круга
                 if (voiceEnabled) {
                     const bestOverall = Math.min(...laps);
                     const delta = lapTime - bestOverall;
