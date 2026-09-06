@@ -536,6 +536,16 @@
             background: #1a2f4a;
         }
 
+        .btn-undo {
+            background: #4a3d1f;
+            border-color: #7a652f;
+            color: #f0e2b8;
+        }
+
+        .btn-undo:active:not(:disabled) {
+            background: #3a3018;
+        }
+
         /* ===== SETTINGS ROW ===== */
         .settings-row {
             display: flex;
@@ -692,9 +702,9 @@
             color: #5f7a9a;
             cursor: pointer;
             margin-left: 8px;
-            font-size: 14px;
+            font-size: 16px;
             transition: color 0.2s;
-            padding: 0 4px;
+            padding: 6px 8px;
             line-height: 1;
         }
 
@@ -926,7 +936,18 @@
             <button class="btn btn-start" id="startBtn">▶ Старт</button>
             <button class="btn btn-stop" id="stopBtn" disabled>⏹ Стоп</button>
             <button class="btn btn-reset" id="resetBtn">⟳ Сброс</button>
+            <button class="btn btn-undo" id="undoBtn" title="Отменить последний круг (Z)" disabled>↩ Отменить</button>
             <button class="btn btn-scan" id="scanBtn">🔄 Сканировать</button>
+        </div>
+
+        <div class="settings-row">
+            <label>
+                🏁 Режим старта
+                <select id="raceModeSelect" title="First lap: таймер идёт с «GO» со стартовых ворот, круги — между нажатиями. Hole shot: таймер запускается первым нажатием (пересечение ворот), круги — между последующими нажатиями.">
+                    <option value="hole">Hole shot</option>
+                    <option value="first">First lap</option>
+                </select>
+            </label>
         </div>
 
         <div class="settings-row">
@@ -1135,6 +1156,7 @@
             const startBtn = document.getElementById('startBtn');
             const stopBtn = document.getElementById('stopBtn');
             const resetBtn = document.getElementById('resetBtn');
+            const undoBtn = document.getElementById('undoBtn');
             const scanBtn = document.getElementById('scanBtn');
             const radioDot = document.getElementById('radioDot');
             const radioLabel = document.getElementById('radioLabel');
@@ -1145,6 +1167,9 @@
             const volumeValue = document.getElementById('volumeValue');
             const bestLapsInput = document.getElementById('bestLapsCount');
             const voiceSwitch = document.getElementById('voiceSwitch');
+
+            // Режим старта
+            const raceModeSelect = document.getElementById('raceModeSelect');
 
             // Среднее меню
             const bestLapTimeEl = document.getElementById('bestLapTime');
@@ -1168,6 +1193,8 @@
             let countdownSeconds = 0;
             let totalElapsed = 0;
             let laps = [];
+            // История операций с кругами для отмены: { type: 'add'|'remove', lap, index }
+            const lapHistory = [];
             let lapStartTime = 0;
             let animFrame = null;
             let lastTimestamp = 0;
@@ -1191,6 +1218,15 @@
 
             // Голосовые подсказки
             let voiceEnabled = true;
+
+            // Режим старта:
+            // 'first' — first lap: таймер идёт со стартовых ворот (с «GO»),
+            //           первое нажатие — обычный первый круг (в зачёте);
+            // 'hole'  — hole shot: таймер запускается первым нажатием
+            //           (пересечение ворот), круги считаются между нажатиями.
+            let raceMode = 'hole';
+            // hole shot: ждём первого пересечения ворот (таймер ещё не идёт)
+            let waitingFirstCrossing = false;
 
             // Countdown duration (seconds)
             const COUNTDOWN_DEFAULT = 5;
@@ -1255,6 +1291,29 @@
                 displayFormat = displayFormat === 0 ? 1 : 0;
                 saveDisplayFormat();
                 updateELRS();
+            });
+
+            // ===== RACE MODE =====
+            function loadRaceMode() {
+                const saved = localStorage.getItem('mqdr_race_mode');
+                if (saved === 'hole' || saved === 'first') {
+                    raceMode = saved;
+                } else {
+                    raceMode = 'hole';
+                }
+                raceModeSelect.value = raceMode;
+            }
+
+            function saveRaceMode() {
+                localStorage.setItem('mqdr_race_mode', raceMode);
+            }
+
+            raceModeSelect.addEventListener('change', function () {
+                raceMode = this.value;
+                saveRaceMode();
+                updateDisplays();
+                const modeName = raceMode === 'hole' ? 'Hole shot' : 'First lap';
+                debugInfo.textContent = `🏁 Режим старта: ${modeName}`;
             });
 
             // ===== BEST LAPS COUNT =====
@@ -1371,6 +1430,7 @@
                 loadDisplayFormat();
                 loadBestLapsCount();
                 loadVoiceSetting();
+                loadRaceMode();
             }
 
             function saveSettings() {
@@ -1404,7 +1464,9 @@
 
                 let infoText = '';
                 if (count === 0) {
-                    if (isRunning) {
+                    if (isRunning && waitingFirstCrossing) {
+                        infoText = 'Пересеки ворота';
+                    } else if (isRunning) {
                         infoText = 'Гонка...';
                     } else if (isCountdown) {
                         infoText = `Старт ${countdownSeconds}s`;
@@ -1513,7 +1575,7 @@
                     statusLabel.textContent = `● СТАРТ ${countdownSeconds}s`;
                     statusLabel.className = 'status countdown';
                 } else if (isRunning) {
-                    statusLabel.textContent = '● В ГОНКЕ';
+                    statusLabel.textContent = (waitingFirstCrossing && laps.length === 0) ? '● ГОТОВ' : '● В ГОНКЕ';
                     statusLabel.className = 'status active';
                 } else {
                     statusLabel.textContent = '● СТОП';
@@ -1528,8 +1590,13 @@
                 } else if (isRunning) {
                     lapBtn.classList.add('active-btn');
                     lapBtn.classList.remove('stopped', 'countdown-btn');
-                    lapBtnLabel.textContent = 'КРУГ';
-                    lapBtnSub.textContent = laps.length > 0 ? `#${laps.length + 1}` : 'старт';
+                    if (waitingFirstCrossing && laps.length === 0) {
+                        lapBtnLabel.textContent = 'СТАРТ';
+                        lapBtnSub.textContent = 'пересеки ворота';
+                    } else {
+                        lapBtnLabel.textContent = 'КРУГ';
+                        lapBtnSub.textContent = laps.length > 0 ? `#${laps.length + 1}` : 'старт';
+                    }
                 } else {
                     lapBtn.classList.remove('active-btn', 'countdown-btn');
                     lapBtn.classList.add('stopped');
@@ -1539,12 +1606,14 @@
 
                 startBtn.disabled = isRunning || isCountdown;
                 stopBtn.disabled = !isRunning && !isCountdown;
+                undoBtn.disabled = lapHistory.length === 0;
+                raceModeSelect.disabled = isRunning || isCountdown;
             }
 
             // ===== RENDER LAP LIST =====
             function renderLapList() {
                 if (laps.length === 0) {
-                    lapListEl.innerHTML = '<div class="empty-laps">Нет кругов</div>';
+                    lapListEl.innerHTML = '<div class="empty-laps">Нет кругов — удаляйте круги кнопкой ✕ в строке или «↩ Отменить»</div>';
                     return;
                 }
 
@@ -1580,16 +1649,64 @@
             // ===== REMOVE LAP =====
             function removeLap(index) {
                 if (index < 0 || index >= laps.length) return;
-                laps.splice(index, 1);
+                const removed = laps.splice(index, 1)[0];
+                lapHistory.push({ type: 'remove', lap: removed, index: index });
+                if (lapHistory.length > 50) lapHistory.shift();
+                recalcTotalElapsed();
+                updateDisplays();
+                debugInfo.textContent = `🗑️ Круг #${index+1} удалён`;
+            }
+
+            // Пересчёт общего времени после изменений списка кругов
+            function recalcTotalElapsed() {
                 const sum = laps.reduce((a, b) => a + b, 0);
                 if (isRunning) {
-                    totalElapsed = sum + (performance.now() - lapStartTime);
+                    if (raceMode === 'hole' && laps.length === 0) {
+                        // Удалили единственный круг в hole shot — снова ждём пересечение ворот
+                        waitingFirstCrossing = true;
+                        lapStartTime = 0;
+                        totalElapsed = 0;
+                    } else {
+                        totalElapsed = sum + (performance.now() - lapStartTime);
+                    }
                     lastTimestamp = 0;
                 } else {
                     totalElapsed = sum;
                 }
+            }
+
+            // ===== UNDO (отмена последнего действия с кругами) =====
+            function undoLastLap() {
+                if (lapHistory.length === 0) {
+                    debugInfo.textContent = 'Нет действий для отмены';
+                    return;
+                }
+                const entry = lapHistory.pop();
+                if (entry.type === 'add') {
+                    // отменяем добавление круга
+                    let i = -1;
+                    if (entry.index >= 0 && entry.index < laps.length && laps[entry.index] === entry.lap) {
+                        i = entry.index;
+                    } else {
+                        i = laps.indexOf(entry.lap);
+                    }
+                    if (i === -1) {
+                        debugInfo.textContent = 'Не удалось отменить: список кругов уже изменён';
+                        updateDisplays();
+                        return;
+                    }
+                    laps.splice(i, 1);
+                    debugInfo.textContent = `↩ Добавление круга ${formatTime(entry.lap)} отменено`;
+                } else {
+                    // возвращаем удалённый круг
+                    const idx = Math.min(entry.index, laps.length);
+                    laps.splice(idx, 0, entry.lap);
+                    debugInfo.textContent = `↩ Круг ${formatTime(entry.lap)} восстановлен`;
+                }
+                recalcTotalElapsed();
                 updateDisplays();
-                debugInfo.textContent = `🗑️ Круг #${index+1} удалён`;
+                updateRadioStatus();
+                if (navigator.vibrate) navigator.vibrate(20);
             }
 
             // ===== TIMER LOOP =====
@@ -1613,20 +1730,32 @@
             function startRacing() {
                 isRunning = true;
                 isCountdown = false;
-                if (laps.length === 0) {
-                    lapStartTime = performance.now();
+                if (raceMode === 'hole') {
+                    // Hole shot: таймер запустится при пересечении стартовых ворот
+                    waitingFirstCrossing = true;
+                    lapStartTime = 0;
                 } else {
-                    const sumPrevious = laps.reduce((a, b) => a + b, 0);
-                    const currentLapElapsed = totalElapsed - sumPrevious;
-                    lapStartTime = performance.now() - currentLapElapsed;
+                    // First lap: таймер идёт со стартовых ворот (с «GO»)
+                    waitingFirstCrossing = false;
+                    if (laps.length === 0) {
+                        lapStartTime = performance.now();
+                    } else {
+                        const sumPrevious = laps.reduce((a, b) => a + b, 0);
+                        const currentLapElapsed = totalElapsed - sumPrevious;
+                        lapStartTime = performance.now() - currentLapElapsed;
+                    }
                 }
                 lastTimestamp = 0;
                 if (animFrame) cancelAnimationFrame(animFrame);
-                animFrame = requestAnimationFrame(tick);
+                if (!waitingFirstCrossing) {
+                    animFrame = requestAnimationFrame(tick);
+                }
                 updateDisplays();
                 if (navigator.vibrate) navigator.vibrate(30);
                 updateRadioStatus();
-                debugInfo.textContent = '🏁 Гонка началась!';
+                debugInfo.textContent = waitingFirstCrossing
+                    ? '🏁 Ворота открыты — таймер запустится на пересечении!'
+                    : '🏁 Гонка началась!';
                 speak('Поехали!');
             }
 
@@ -1639,6 +1768,7 @@
                 }
                 totalElapsed = 0;
                 laps = [];
+                lapHistory.length = 0;
                 lapStartTime = 0;
                 updateDisplays();
 
@@ -1704,23 +1834,31 @@
                 }
 
                 if (!isRunning) return;
+                finishRace();
+                if (navigator.vibrate) navigator.vibrate([30, 60, 30]);
+                debugInfo.textContent = '⏹ Гонка остановлена';
+                speak('Гонка остановлена');
+            }
+
+            // ===== FINISH RACE (общая часть остановки) =====
+            function finishRace() {
                 isRunning = false;
+                waitingFirstCrossing = false;
                 if (animFrame) {
                     cancelAnimationFrame(animFrame);
                     animFrame = null;
                 }
+                timerLabel.textContent = 'ОБЩЕЕ ВРЕМЯ';
+                totalTimeEl.className = 'time';
                 updateDisplays();
-                if (navigator.vibrate) navigator.vibrate([30, 60, 30]);
                 updateRadioStatus();
-                debugInfo.textContent = '⏹ Гонка остановлена';
                 startBtn.disabled = false;
                 stopBtn.disabled = true;
-                speak('Гонка остановлена');
             }
 
             // ===== STOP WITH TRIPLE BEEP =====
             function stopWithTripleBeep() {
-                if (!isRunning) {
+                if (!isRunning || (waitingFirstCrossing && laps.length === 0)) {
                     debugInfo.textContent = 'Гонка не активна, удержание игнорируется';
                     return;
                 }
@@ -1749,8 +1887,10 @@
                         animFrame = null;
                     }
                 }
+                waitingFirstCrossing = false;
                 totalElapsed = 0;
                 laps = [];
+                lapHistory.length = 0;
                 lapStartTime = 0;
                 updateDisplays();
                 if (navigator.vibrate) navigator.vibrate(20);
@@ -1768,6 +1908,22 @@
                 speak('Сброс');
             }
 
+            // ===== START TIMING (hole shot: пересечение стартовых ворот) =====
+            function startTiming() {
+                if (!waitingFirstCrossing || !isRunning) return;
+                waitingFirstCrossing = false;
+                lapStartTime = performance.now();
+                lastTimestamp = 0;
+                if (animFrame) cancelAnimationFrame(animFrame);
+                animFrame = requestAnimationFrame(tick);
+                updateDisplays();
+                if (navigator.vibrate) navigator.vibrate(50);
+                beepShort();
+                debugInfo.textContent = '⏱️ Таймер запущен — пересечение стартовых ворот';
+                if (voiceEnabled) speak('Время пошло');
+                updateRadioStatus();
+            }
+
             // ===== RECORD LAP =====
             function recordLap() {
                 if (!isRunning) {
@@ -1775,6 +1931,13 @@
                     if (navigator.vibrate) navigator.vibrate(10);
                     return;
                 }
+
+                // Hole shot: первое нажатие (пересечение ворот) запускает таймер
+                if (waitingFirstCrossing) {
+                    startTiming();
+                    return;
+                }
+
                 const nowTime = performance.now();
                 let lapTime = nowTime - lapStartTime;
                 if (lapTime < 0) lapTime = 0;
@@ -1789,6 +1952,8 @@
                 const isNewBest = lapTime < prevBest;
 
                 laps.push(lapTime);
+                lapHistory.push({ type: 'add', lap: lapTime, index: laps.length - 1 });
+                if (lapHistory.length > 50) lapHistory.shift();
                 lapStartTime = nowTime;
                 updateDisplays();
                 if (navigator.vibrate) navigator.vibrate(50);
@@ -1823,7 +1988,10 @@
 
                 let action = null;
                 if (source === 'gamepad') {
-                    if (isRunning) {
+                    if (isRunning && waitingFirstCrossing && laps.length === 0) {
+                        // Hole shot: до пересечения ворот удержание не останавливает гонку
+                        action = null;
+                    } else if (isRunning) {
                         action = stopWithTripleBeep;
                     } else if (!isRunning && !isCountdown) {
                         action = () => {
@@ -1859,7 +2027,11 @@
                     const duration = performance.now() - pressStartTime;
                     if (duration < 1000) {
                         if (isRunning) {
-                            recordLap();
+                            if (waitingFirstCrossing) {
+                                startTiming();
+                            } else {
+                                recordLap();
+                            }
                         } else {
                             if (!isCountdown) {
                                 debugInfo.textContent = 'Нажмите «Старт» или удерживайте кнопку пульта 1 с для старта.';
@@ -2025,6 +2197,7 @@
             });
             stopBtn.addEventListener('click', stopTimer);
             resetBtn.addEventListener('click', resetAll);
+            undoBtn.addEventListener('click', undoLastLap);
             scanBtn.addEventListener('click', scanGamepads);
             radioStatus.addEventListener('click', scanGamepads);
 
@@ -2032,7 +2205,11 @@
                 if (e.key === ' ' || e.key === 'Enter') {
                     e.preventDefault();
                     if (isRunning) {
-                        recordLap();
+                        if (waitingFirstCrossing) {
+                            startTiming();
+                        } else {
+                            recordLap();
+                        }
                     } else if (!isCountdown) {
                         startCountdown(COUNTDOWN_DEFAULT);
                     }
@@ -2041,6 +2218,9 @@
                     if (isRunning || isCountdown) stopTimer();
                 }
                 if (e.key === 'r' || e.key === 'R') resetAll();
+                if ((e.key === 'z' || e.key === 'Z') && !e.ctrlKey && !e.metaKey) {
+                    undoLastLap();
+                }
             });
 
             document.querySelectorAll('button, .circle-btn').forEach(el => {
@@ -2048,6 +2228,11 @@
             });
             let lastTouchEnd = 0;
             document.addEventListener('touchend', (e) => {
+                // Не глушим быстрые тапы по кнопкам удаления круга
+                if (e.target.closest && e.target.closest('.delete-btn, .btn-undo')) {
+                    lastTouchEnd = 0;
+                    return;
+                }
                 const now = Date.now();
                 if (now - lastTouchEnd <= 300) {
                     e.preventDefault();
@@ -2068,6 +2253,17 @@
                 resetAll,
                 recordLap,
                 removeLap,
+                undoLastLap,
+                startTiming,
+                getRaceMode: () => raceMode,
+                setRaceMode: (m) => {
+                    if (m === 'hole' || m === 'first') {
+                        raceMode = m;
+                        raceModeSelect.value = m;
+                        saveRaceMode();
+                        updateDisplays();
+                    }
+                },
                 gamepadConnected,
                 scanGamepads,
                 stopWithTripleBeep,
