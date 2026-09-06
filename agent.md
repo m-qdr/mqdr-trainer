@@ -19,7 +19,9 @@ Vanilla HTML/CSS/JS, **без сборки, без фреймворков, бе�
 ## Структура index.html
 
 - `<head>` — PWA-мета, `<link rel="manifest">`, favicon, apple-touch-icon
-- `<style>` — CSS (тёмная тема, фон `#0b0e14`, акцент `#0df3f0`, скруглённый «телефонный» контейнер)
+- `<style>` — CSS (тёмная тема, фон `#0b0e14`, акцент `#0df3f0`, скруглённый «телефонный» контейнер).
+  Адаптив: safe-area (`viewport-fit=cover` + `env(safe-area-inset-*)`), `100dvh`, медиазапросы
+  `max-width: 440px`, `max-width: 360px`, компактный режим `max-height: 520px + landscape`; тач-цели ≥40px.
 - Разметка — офлайн-бейдж, кнопка установки PWA, основной UI
 - `<script>` — IIFE-модули в порядке появления:
   1. `registerSW()` — регистрация `sw.js` (только https/localhost, по событию `load`)
@@ -40,7 +42,8 @@ Vanilla HTML/CSS/JS, **без сборки, без фреймворков, бе�
 3. Манифест и SW — только реальные файлы того же origin. Не возвращаться к data:/blob: URI.
 4. Минимальное время круга 1 с — защита от ложных срабатываний, не убирать.
 5. Ключи настроек в `localStorage` с префиксом `mqdr_` (`mqdr_voice_enabled`, `mqdr_volume`,
-   `mqdr_display_format`, `mqdr_best_laps_count`, `mqdr_race_mode`); ключ `laps_trainer_radiomaster` — легаси,
+   `mqdr_display_format`, `mqdr_best_laps_count`, `mqdr_race_mode`, `mqdr_time_mode`,
+   `mqdr_timer_seconds`); ключ `laps_trainer_radiomaster` — легаси,
    сохранять совместимость при чтении/записи.
 6. Аудио- и речевые API требуют пользовательского жеста — не вызывать до первого взаимодействия.
 7. Вьюпорт зафиксирован (`user-scalable=no`, запрет double-tap zoom) — часть UX, не менять без причины.

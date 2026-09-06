@@ -2,7 +2,7 @@
 <html lang="ru">
 <head>
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
     <title>MQDR Trainer</title>
 
     <!-- PWA Meta Tags -->
@@ -32,10 +32,12 @@
             background: #0b0e14;
             color: #e8edf5;
             min-height: 100vh;
+            min-height: 100dvh;
             display: flex;
             align-items: center;
             justify-content: center;
             padding: 12px;
+            padding: max(12px, env(safe-area-inset-top)) max(12px, env(safe-area-inset-right)) max(12px, env(safe-area-inset-bottom)) max(12px, env(safe-area-inset-left));
         }
 
         .app {
@@ -252,6 +254,13 @@
             -webkit-text-fill-color: transparent;
             background-clip: text;
             font-size: 72px;
+        }
+
+        .timer-main .time.low {
+            background: linear-gradient(to right, #ff6b6b, #f87171);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
 
         .timer-main .label {
@@ -634,6 +643,7 @@
             margin-top: 16px;
             max-height: 160px;
             overflow-y: auto;
+            overscroll-behavior: contain;
             border-top: 1px solid #25313f;
             padding-top: 12px;
             scrollbar-width: thin;
@@ -706,6 +716,7 @@
             transition: color 0.2s;
             padding: 6px 8px;
             line-height: 1;
+            touch-action: manipulation;
         }
 
         .lap-item .delete-btn:hover {
@@ -734,137 +745,204 @@
         /* ===== RESPONSIVE ===== */
         @media (max-width: 440px) {
             .app {
-                padding: 14px 12px 20px;
-                border-radius: 28px;
+                padding: 14px 12px calc(20px + env(safe-area-inset-bottom));
+                border-radius: 24px;
             }
             .timer-main .time {
-                font-size: 48px;
+                font-size: 52px;
             }
             .timer-main .time.countdown {
-                font-size: 56px;
+                font-size: 60px;
             }
             .circle-btn {
-                width: 130px;
-                height: 130px;
-                font-size: 22px;
+                width: 150px;
+                height: 150px;
+                font-size: 24px;
+            }
+            .circle-btn .sub {
+                font-size: 12px;
             }
             .laps-grid .item .value {
-                font-size: 20px;
+                font-size: 21px;
             }
             .btn {
-                padding: 8px 12px;
-                font-size: 12px;
-                max-width: 90px;
+                padding: 12px 12px;
+                font-size: 13px;
+                max-width: none;
+                flex: 1 1 40%;
+            }
+            .controls {
+                gap: 8px;
+            }
+            .lap-list {
+                max-height: 200px;
             }
             .lap-item {
-                font-size: 13px;
+                font-size: 15px;
+                padding: 9px 4px;
+            }
+            .lap-item .idx {
+                width: 44px;
             }
             .lap-item .diff {
-                font-size: 12px;
-                min-width: 50px;
+                font-size: 13px;
+                min-width: 56px;
             }
             .lap-item .delete-btn {
-                font-size: 12px;
-                margin-left: 4px;
+                font-size: 18px;
+                padding: 10px 10px;
             }
             .settings-row {
-                padding: 6px 12px;
+                padding: 10px 12px;
             }
             .settings-row label {
-                font-size: 12px;
+                font-size: 13px;
             }
-            .header h1 {
-                font-size: 18px;
-            }
-            .elrs-data .lap-number {
-                font-size: 22px;
-            }
-            .elrs-data .lap-time {
-                font-size: 20px;
+            .settings-row select,
+            .settings-row input[type="number"] {
+                min-height: 40px;
             }
             .settings-row input[type="range"] {
-                width: 80px;
+                width: 110px;
+                min-height: 32px;
             }
-            .elrs-backpack .elrs-header {
-                font-size: 10px;
+            .header h1 {
+                font-size: 17px;
             }
-            .settings-row input[type="number"] {
-                width: 50px;
-                font-size: 12px;
+            .elrs-data .lap-number {
+                font-size: 24px;
+            }
+            .elrs-data .lap-time {
+                font-size: 22px;
             }
             .install-btn {
-                padding: 10px 40px 10px 20px;
+                padding: 12px 44px 12px 20px;
                 font-size: 14px;
-                bottom: 16px;
+                bottom: calc(16px + env(safe-area-inset-bottom));
             }
             .install-btn .close-btn {
-                width: 32px;
-                height: 32px;
+                width: 34px;
+                height: 34px;
                 font-size: 18px;
                 right: 4px;
             }
             .offline-badge {
-                font-size: 10px;
-                padding: 2px 10px;
+                font-size: 11px;
+                padding: 4px 12px;
+                top: calc(12px + env(safe-area-inset-top));
+                right: calc(12px + env(safe-area-inset-right));
             }
         }
 
         @media (max-width: 360px) {
+            .app {
+                padding: 12px 10px calc(16px + env(safe-area-inset-bottom));
+                border-radius: 20px;
+            }
             .timer-main .time {
-                font-size: 40px;
+                font-size: 44px;
             }
             .timer-main .time.countdown {
-                font-size: 46px;
+                font-size: 52px;
             }
             .circle-btn {
-                width: 110px;
-                height: 110px;
-                font-size: 18px;
+                width: 132px;
+                height: 132px;
+                font-size: 20px;
+            }
+            .circle-btn .sub {
+                font-size: 11px;
             }
             .laps-grid .item .value {
-                font-size: 17px;
+                font-size: 18px;
             }
             .btn {
-                font-size: 11px;
-                padding: 6px 8px;
-                max-width: 70px;
+                font-size: 12px;
+                padding: 10px 8px;
+                flex: 1 1 40%;
             }
-            .elrs-data .lap-number {
-                font-size: 18px;
-                min-width: 40px;
+            .lap-item {
+                font-size: 14px;
             }
-            .elrs-data .lap-time {
-                font-size: 16px;
+            .lap-item .idx {
+                width: 38px;
             }
             .lap-item .diff {
-                font-size: 11px;
-                min-width: 40px;
+                font-size: 12px;
+                min-width: 48px;
             }
             .lap-item .delete-btn {
-                font-size: 11px;
-                margin-left: 4px;
+                font-size: 16px;
+                padding: 8px 8px;
+            }
+            .elrs-data .lap-number {
+                font-size: 20px;
+            }
+            .elrs-data .lap-time {
+                font-size: 18px;
             }
             .settings-row input[type="range"] {
-                width: 60px;
-            }
-            .settings-row input[type="number"] {
-                width: 40px;
-                font-size: 11px;
+                width: 90px;
             }
             .install-btn {
-                padding: 8px 34px 8px 16px;
+                padding: 10px 40px 10px 16px;
                 font-size: 12px;
-                bottom: 12px;
+                bottom: calc(12px + env(safe-area-inset-bottom));
             }
             .install-btn .close-btn {
-                width: 28px;
-                height: 28px;
+                width: 30px;
+                height: 30px;
                 font-size: 16px;
                 right: 4px;
             }
             .offline-badge {
-                font-size: 9px;
-                padding: 2px 8px;
+                font-size: 10px;
+                padding: 3px 10px;
+                top: calc(10px + env(safe-area-inset-top));
+                right: calc(10px + env(safe-area-inset-right));
+            }
+        }
+        /* Телефон в альбомной ориентации — компактный режим */
+        @media (max-height: 520px) and (orientation: landscape) {
+            .app {
+                padding: 10px 16px 14px;
+                border-radius: 20px;
+            }
+            .timer-main .time {
+                font-size: 34px;
+            }
+            .timer-main .time.countdown {
+                font-size: 40px;
+            }
+            .circle-btn {
+                width: 96px;
+                height: 96px;
+                font-size: 16px;
+            }
+            .circle-btn .sub {
+                font-size: 10px;
+                margin-top: 2px;
+            }
+            .circle-btn-wrap {
+                margin: 2px 0 8px;
+            }
+            .elrs-backpack {
+                padding: 8px 14px;
+            }
+            .elrs-data .lap-number {
+                font-size: 18px;
+            }
+            .elrs-data .lap-time {
+                font-size: 16px;
+            }
+            .lap-list {
+                max-height: 80px;
+            }
+            .lap-item {
+                padding: 4px;
+            }
+            .settings-row {
+                padding: 4px 10px;
             }
         }
     </style>
@@ -947,6 +1025,24 @@
                     <option value="hole">Hole shot</option>
                     <option value="first">First lap</option>
                 </select>
+            </label>
+        </div>
+
+        <div class="settings-row">
+            <label>
+                ⏱️ Режим времени
+                <select id="timeModeSelect" title="Секундомер: время считается вверх. Таймер: обратный отсчёт от заданного лимита, на нуле гонка завершается автоматически.">
+                    <option value="stopwatch">Секундомер</option>
+                    <option value="timer">Таймер</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="settings-row" id="timerDurationRow">
+            <label>
+                ⏳ Длительность таймера
+                <input type="number" id="timerMinutes" min="0.5" max="60" step="0.5" value="2" />
+                мин
             </label>
         </div>
 
@@ -1171,6 +1267,11 @@
             // Режим старта
             const raceModeSelect = document.getElementById('raceModeSelect');
 
+            // Режим времени и длительность таймера
+            const timeModeSelect = document.getElementById('timeModeSelect');
+            const timerDurationRow = document.getElementById('timerDurationRow');
+            const timerMinutesInput = document.getElementById('timerMinutes');
+
             // Среднее меню
             const bestLapTimeEl = document.getElementById('bestLapTime');
             const lastLapTimeEl = document.getElementById('lastLapTime');
@@ -1227,6 +1328,11 @@
             let raceMode = 'hole';
             // hole shot: ждём первого пересечения ворот (таймер ещё не идёт)
             let waitingFirstCrossing = false;
+
+            // Режим отображения времени: 'stopwatch' — вверх (как сейчас),
+            // 'timer' — обратный отсчёт от timerSeconds с автофинишем на нуле
+            let timeMode = 'stopwatch';
+            let timerSeconds = 120;
 
             // Countdown duration (seconds)
             const COUNTDOWN_DEFAULT = 5;
@@ -1314,6 +1420,52 @@
                 updateDisplays();
                 const modeName = raceMode === 'hole' ? 'Hole shot' : 'First lap';
                 debugInfo.textContent = `🏁 Режим старта: ${modeName}`;
+            });
+
+            // ===== TIME MODE (секундомер / таймер) =====
+            function loadTimeMode() {
+                const saved = localStorage.getItem('mqdr_time_mode');
+                timeMode = (saved === 'timer') ? 'timer' : 'stopwatch';
+                timeModeSelect.value = timeMode;
+                timerDurationRow.style.display = (timeMode === 'timer') ? '' : 'none';
+            }
+
+            function loadTimerSeconds() {
+                const saved = parseInt(localStorage.getItem('mqdr_timer_seconds'), 10);
+                if (!isNaN(saved) && saved >= 30 && saved <= 3600) {
+                    timerSeconds = saved;
+                } else {
+                    timerSeconds = 120;
+                }
+                timerMinutesInput.value = timerSeconds / 60;
+            }
+
+            function updateTimeLabel() {
+                timerLabel.textContent = (timeMode === 'timer') ? 'ОСТАЛОСЬ' : 'ОБЩЕЕ ВРЕМЯ';
+            }
+
+            timeModeSelect.addEventListener('change', function () {
+                timeMode = this.value;
+                localStorage.setItem('mqdr_time_mode', timeMode);
+                timerDurationRow.style.display = (timeMode === 'timer') ? '' : 'none';
+                updateTimeLabel();
+                updateDisplays();
+                debugInfo.textContent = (timeMode === 'timer')
+                    ? `⏱️ Режим: таймер ${formatTime(timerSeconds * 1000)} с обратным отсчётом`
+                    : '⏱️ Режим: секундомер';
+            });
+
+            timerMinutesInput.addEventListener('change', function () {
+                const minutes = parseFloat(this.value);
+                if (!isNaN(minutes) && minutes >= 0.5 && minutes <= 60) {
+                    timerSeconds = Math.round(minutes * 60);
+                } else {
+                    timerSeconds = 120;
+                }
+                this.value = timerSeconds / 60;
+                localStorage.setItem('mqdr_timer_seconds', String(timerSeconds));
+                updateDisplays();
+                debugInfo.textContent = `⏳ Таймер: ${formatTime(timerSeconds * 1000)}`;
             });
 
             // ===== BEST LAPS COUNT =====
@@ -1431,6 +1583,8 @@
                 loadBestLapsCount();
                 loadVoiceSetting();
                 loadRaceMode();
+                loadTimeMode();
+                loadTimerSeconds();
             }
 
             function saveSettings() {
@@ -1566,7 +1720,18 @@
 
             // ===== UPDATE DISPLAYS =====
             function updateDisplays() {
-                totalTimeEl.textContent = formatTime(totalElapsed);
+                if (timeMode === 'timer') {
+                    const remaining = Math.max(0, timerSeconds * 1000 - totalElapsed);
+                    totalTimeEl.textContent = formatTime(remaining);
+                    if (!isCountdown) {
+                        totalTimeEl.className = (isRunning && remaining < 10000) ? 'time low' : 'time';
+                    }
+                } else {
+                    totalTimeEl.textContent = formatTime(totalElapsed);
+                    if (!isCountdown) {
+                        totalTimeEl.className = 'time';
+                    }
+                }
                 renderLapList();
                 updateELRS();
                 updateMiddleGrid();
@@ -1608,6 +1773,8 @@
                 stopBtn.disabled = !isRunning && !isCountdown;
                 undoBtn.disabled = lapHistory.length === 0;
                 raceModeSelect.disabled = isRunning || isCountdown;
+                timeModeSelect.disabled = isRunning || isCountdown;
+                timerMinutesInput.disabled = isRunning || isCountdown;
             }
 
             // ===== RENDER LAP LIST =====
@@ -1722,8 +1889,24 @@
                 const delta = timestamp - lastTimestamp;
                 lastTimestamp = timestamp;
                 totalElapsed += delta;
+                // Таймер: лимит исчерпан — автофиниш
+                if (timeMode === 'timer' && totalElapsed >= timerSeconds * 1000) {
+                    totalElapsed = timerSeconds * 1000;
+                    updateDisplays();
+                    timeUpFinish();
+                    return;
+                }
                 updateDisplays();
                 animFrame = requestAnimationFrame(tick);
+            }
+
+            // ===== TIME UP (время таймера вышло) =====
+            function timeUpFinish() {
+                finishRace();
+                beepTriple();
+                if (navigator.vibrate) navigator.vibrate([100, 50, 100, 50, 100]);
+                debugInfo.textContent = '⏰ Время вышло — гонка завершена';
+                if (voiceEnabled) speak('Время вышло');
             }
 
             // ===== START RACING =====
@@ -1799,7 +1982,7 @@
                         clearInterval(countdownInterval);
                         countdownInterval = null;
                         isCountdown = false;
-                        timerLabel.textContent = 'ОБЩЕЕ ВРЕМЯ';
+                        updateTimeLabel();
                         totalTimeEl.className = 'time';
                         startRacing();
                     }
@@ -1818,7 +2001,7 @@
                         countdownInterval = null;
                     }
                     isCountdown = false;
-                    timerLabel.textContent = 'ОБЩЕЕ ВРЕМЯ';
+                    updateTimeLabel();
                     totalTimeEl.className = 'time';
                     totalTimeEl.textContent = '00:00.00';
                     totalElapsed = 0;
@@ -1848,7 +2031,7 @@
                     cancelAnimationFrame(animFrame);
                     animFrame = null;
                 }
-                timerLabel.textContent = 'ОБЩЕЕ ВРЕМЯ';
+                updateTimeLabel();
                 totalTimeEl.className = 'time';
                 updateDisplays();
                 updateRadioStatus();
@@ -1877,7 +2060,7 @@
                         countdownInterval = null;
                     }
                     isCountdown = false;
-                    timerLabel.textContent = 'ОБЩЕЕ ВРЕМЯ';
+                    updateTimeLabel();
                     totalTimeEl.className = 'time';
                 }
                 if (isRunning) {
@@ -2261,6 +2444,25 @@
                         raceMode = m;
                         raceModeSelect.value = m;
                         saveRaceMode();
+                        updateDisplays();
+                    }
+                },
+                getTimeMode: () => timeMode,
+                setTimeMode: (m) => {
+                    if (m === 'stopwatch' || m === 'timer') {
+                        timeMode = m;
+                        timeModeSelect.value = m;
+                        localStorage.setItem('mqdr_time_mode', m);
+                        timerDurationRow.style.display = (m === 'timer') ? '' : 'none';
+                        updateTimeLabel();
+                        updateDisplays();
+                    }
+                },
+                setTimerSeconds: (s) => {
+                    if (typeof s === 'number' && s >= 30 && s <= 3600) {
+                        timerSeconds = Math.round(s);
+                        timerMinutesInput.value = timerSeconds / 60;
+                        localStorage.setItem('mqdr_timer_seconds', String(timerSeconds));
                         updateDisplays();
                     }
                 },
