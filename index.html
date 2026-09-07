@@ -412,6 +412,54 @@
             margin-top: 2px;
         }
 
+        /* ===== TEAM PANEL ===== */
+        .team-panel {
+            display: none;
+            flex-wrap: wrap;
+            gap: 6px;
+            justify-content: center;
+            margin-top: 10px;
+        }
+
+        .team-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            background: #10171f;
+            border: 1px solid var(--pc, #2a3545);
+            color: #cfe0f5;
+            border-radius: 20px;
+            padding: 7px 12px;
+            font-size: 12px;
+            font-variant-numeric: tabular-nums;
+            cursor: pointer;
+            opacity: 0.5;
+            transition: opacity 0.2s, box-shadow 0.2s;
+            touch-action: manipulation;
+            user-select: none;
+        }
+
+        .team-chip .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: var(--pc, #6d85a5);
+            flex: none;
+        }
+
+        .team-chip.active {
+            opacity: 1;
+            background: #16202c;
+        }
+
+        .lap-item .lap-pilot {
+            width: 30px;
+            font-size: 11px;
+            font-weight: 700;
+            color: var(--pc, #6d85a5);
+            flex: none;
+        }
+
         /* ===== CIRCLE BUTTON ===== */
         .circle-btn-wrap {
             display: flex;
@@ -1003,6 +1051,9 @@
             </div>
         </div>
 
+        <!-- Командная гонка: чипы пилотов -->
+        <div class="team-panel" id="teamPanel"></div>
+
         <div class="circle-btn-wrap">
             <div class="circle-btn" id="lapBtn">
                 <span id="lapBtnLabel">КРУГ</span>
@@ -1024,6 +1075,22 @@
                 <select id="raceModeSelect" title="First lap: таймер идёт с «GO» со стартовых ворот, круги — между нажатиями. Hole shot: таймер запускается первым нажатием (пересечение ворот), круги — между последующими нажатиями.">
                     <option value="hole">Hole shot</option>
                     <option value="first">First lap</option>
+                </select>
+            </label>
+        </div>
+
+        <div class="settings-row">
+            <label>
+                👥 Командная гонка
+                <select id="teamCountSelect" title="Круги приписываются активному пилоту. Смена пилота — тапом по чипу или клавишей P.">
+                    <option value="1">Выкл</option>
+                    <option value="2">2 пилота</option>
+                    <option value="3">3 пилота</option>
+                    <option value="4">4 пилота</option>
+                    <option value="5">5 пилотов</option>
+                    <option value="6">6 пилотов</option>
+                    <option value="7">7 пилотов</option>
+                    <option value="8">8 пилотов</option>
                 </select>
             </label>
         </div>
@@ -1272,6 +1339,10 @@
             const timerDurationRow = document.getElementById('timerDurationRow');
             const timerMinutesInput = document.getElementById('timerMinutes');
 
+            // Командная гонка
+            const teamCountSelect = document.getElementById('teamCountSelect');
+            const teamPanel = document.getElementById('teamPanel');
+
             // Среднее меню
             const bestLapTimeEl = document.getElementById('bestLapTime');
             const lastLapTimeEl = document.getElementById('lastLapTime');
@@ -1333,6 +1404,12 @@
             // 'timer' — обратный отсчёт от timerSeconds с автофинишем на нуле
             let timeMode = 'stopwatch';
             let timerSeconds = 120;
+
+            // Командные гонки: круги приписываются текущему пилоту
+            let teamCount = 1;      // 1 = одиночная гонка (командный режим выкл)
+            let currentPilot = 0;   // активный пилот (0-based)
+            let lapPilots = [];     // пилот каждого круга (параллелен laps)
+            const PILOT_COLORS = ['#0df3f0', '#fbbf24', '#3fe8b0', '#f472b6', '#a78bfa', '#fb923c', '#60a5fa', '#f87171'];
 
             // Countdown duration (seconds)
             const COUNTDOWN_DEFAULT = 5;
@@ -1468,6 +1545,70 @@
                 debugInfo.textContent = `⏳ Таймер: ${formatTime(timerSeconds * 1000)}`;
             });
 
+            // ===== TEAM (командные гонки) =====
+            function loadTeamCount() {
+                const saved = parseInt(localStorage.getItem('mqdr_team_count'), 10);
+                teamCount = (!isNaN(saved) && saved >= 1 && saved <= 8) ? saved : 1;
+                teamCountSelect.value = String(teamCount);
+            }
+
+            teamCountSelect.addEventListener('change', function () {
+                teamCount = parseInt(this.value, 10);
+                localStorage.setItem('mqdr_team_count', String(teamCount));
+                currentPilot = 0;
+                renderTeamPanel();
+                debugInfo.textContent = (teamCount >= 2)
+                    ? `👥 Командная гонка: ${teamCount} пилотов. Смена — тап по чипу или клавиша P.`
+                    : '👥 Командная гонка выключена';
+            });
+
+            function renderTeamPanel() {
+                if (teamCount < 2) {
+                    teamPanel.style.display = 'none';
+                    return;
+                }
+                teamPanel.style.display = 'flex';
+                let html = '';
+                for (let i = 0; i < teamCount; i++) {
+                    const count = lapPilots.filter(p => p === i).length;
+                    const pilotLaps = laps.filter((_, idx) => lapPilots[idx] === i);
+                    const bestStr = pilotLaps.length ? formatTime(Math.min(...pilotLaps)) : '--';
+                    const active = (i === currentPilot) ? ' active' : '';
+                    html += `<div class="team-chip${active}" data-pilot="${i}" style="--pc:${PILOT_COLORS[i % PILOT_COLORS.length]}">` +
+                        `<span class="dot"></span>Пилот ${i + 1} · ${count} · ${bestStr}</div>`;
+                }
+                teamPanel.innerHTML = html;
+            }
+
+            teamPanel.addEventListener('click', function (e) {
+                const chip = e.target.closest('.team-chip');
+                if (!chip) return;
+                const n = parseInt(chip.dataset.pilot, 10);
+                if (!isNaN(n)) switchPilot(n);
+            });
+
+            teamPanel.addEventListener('touchend', function (e) {
+                e.preventDefault();
+                const chip = e.target.closest('.team-chip');
+                if (!chip) return;
+                const n = parseInt(chip.dataset.pilot, 10);
+                if (!isNaN(n)) switchPilot(n);
+            }, { passive: false });
+
+            function switchPilot(n) {
+                if (teamCount < 2 || n < 0 || n >= teamCount || n === currentPilot) return;
+                currentPilot = n;
+                renderTeamPanel();
+                if (navigator.vibrate) navigator.vibrate(15);
+                debugInfo.textContent = `👥 Активен пилот ${currentPilot + 1}`;
+                if (voiceEnabled) speak(`Пилот ${currentPilot + 1}`);
+            }
+
+            function nextPilot() {
+                if (teamCount < 2) return;
+                switchPilot((currentPilot + 1) % teamCount);
+            }
+
             // ===== BEST LAPS COUNT =====
             function loadBestLapsCount() {
                 const saved = localStorage.getItem('mqdr_best_laps_count');
@@ -1585,6 +1726,7 @@
                 loadRaceMode();
                 loadTimeMode();
                 loadTimerSeconds();
+                loadTeamCount();
             }
 
             function saveSettings() {
@@ -1733,6 +1875,7 @@
                     }
                 }
                 renderLapList();
+                renderTeamPanel();
                 updateELRS();
                 updateMiddleGrid();
 
@@ -1775,6 +1918,8 @@
                 raceModeSelect.disabled = isRunning || isCountdown;
                 timeModeSelect.disabled = isRunning || isCountdown;
                 timerMinutesInput.disabled = isRunning || isCountdown;
+                teamCountSelect.disabled = isRunning || isCountdown;
+                teamPanel.classList.toggle('race-on', isRunning);
             }
 
             // ===== RENDER LAP LIST =====
@@ -1800,9 +1945,14 @@
                         diffClass = 'diff positive';
                     }
                     const lapNumber = i + 1;
+                    const pilotColor = PILOT_COLORS[(lapPilots[i] || 0) % PILOT_COLORS.length];
+                    const pilotCell = (teamCount >= 2)
+                        ? `<span class="lap-pilot" style="--pc:${pilotColor}">P${(lapPilots[i] || 0) + 1}</span>`
+                        : '';
                     html += `
                                 <div class="lap-item ${isBest ? 'best' : ''}" data-index="${i}">
                                     <span class="idx">#${lapNumber}</span>
+                                    ${pilotCell}
                                     <span class="time">${formatTime(lapTime)}</span>
                                     <span class="diff ${diffClass}">${diffStr}</span>
                                     <span class="delete-btn" title="Удалить круг">✕</span>
@@ -1817,7 +1967,8 @@
             function removeLap(index) {
                 if (index < 0 || index >= laps.length) return;
                 const removed = laps.splice(index, 1)[0];
-                lapHistory.push({ type: 'remove', lap: removed, index: index });
+                const removedPilot = lapPilots.splice(index, 1)[0];
+                lapHistory.push({ type: 'remove', lap: removed, index: index, pilot: removedPilot });
                 if (lapHistory.length > 50) lapHistory.shift();
                 recalcTotalElapsed();
                 updateDisplays();
@@ -1863,11 +2014,13 @@
                         return;
                     }
                     laps.splice(i, 1);
+                    lapPilots.splice(i, 1);
                     debugInfo.textContent = `↩ Добавление круга ${formatTime(entry.lap)} отменено`;
                 } else {
                     // возвращаем удалённый круг
                     const idx = Math.min(entry.index, laps.length);
                     laps.splice(idx, 0, entry.lap);
+                    lapPilots.splice(idx, 0, (entry.pilot !== undefined) ? entry.pilot : 0);
                     debugInfo.textContent = `↩ Круг ${formatTime(entry.lap)} восстановлен`;
                 }
                 recalcTotalElapsed();
@@ -1951,8 +2104,10 @@
                 }
                 totalElapsed = 0;
                 laps = [];
+                lapPilots = [];
                 lapHistory.length = 0;
                 lapStartTime = 0;
+                currentPilot = 0;
                 updateDisplays();
 
                 isCountdown = true;
@@ -2073,8 +2228,11 @@
                 waitingFirstCrossing = false;
                 totalElapsed = 0;
                 laps = [];
+                lapPilots = [];
                 lapHistory.length = 0;
                 lapStartTime = 0;
+                currentPilot = 0;
+                renderTeamPanel();
                 updateDisplays();
                 if (navigator.vibrate) navigator.vibrate(20);
                 updateRadioStatus();
@@ -2131,25 +2289,32 @@
                     return;
                 }
 
-                const prevBest = laps.length > 0 ? Math.min(...laps) : Infinity;
+                const prevBestPool = (teamCount >= 2)
+                    ? laps.filter((_, idx) => lapPilots[idx] === currentPilot)
+                    : laps;
+                const prevBest = prevBestPool.length > 0 ? Math.min(...prevBestPool) : Infinity;
                 const isNewBest = lapTime < prevBest;
 
                 laps.push(lapTime);
-                lapHistory.push({ type: 'add', lap: lapTime, index: laps.length - 1 });
+                lapPilots.push(currentPilot);
+                lapHistory.push({ type: 'add', lap: lapTime, index: laps.length - 1, pilot: currentPilot });
                 if (lapHistory.length > 50) lapHistory.shift();
                 lapStartTime = nowTime;
                 updateDisplays();
                 if (navigator.vibrate) navigator.vibrate(50);
-                debugInfo.textContent = `✅ Круг #${laps.length} зафиксирован (${formatTime(lapTime)})`;
+                debugInfo.textContent = (teamCount >= 2)
+                    ? `✅ Пилот ${currentPilot + 1}: круг #${laps.length} (${formatTime(lapTime)})`
+                    : `✅ Круг #${laps.length} зафиксирован (${formatTime(lapTime)})`;
                 beepShort();
 
                 if (voiceEnabled) {
                     const bestOverall = Math.min(...laps);
                     const delta = lapTime - bestOverall;
+                    const pilotPrefix = (teamCount >= 2) ? `Пилот ${currentPilot + 1}. ` : '';
                     if (isNewBest) {
-                        speak('Новый лучший круг!');
+                        speak(pilotPrefix + 'Новый лучший круг!');
                     } else {
-                        speak(`Круг ${laps.length}, отставание +${formatTime(delta)}`);
+                        speak(`${pilotPrefix}Круг ${laps.length}, отставание +${formatTime(delta)}`);
                     }
                 }
 
@@ -2404,6 +2569,9 @@
                 if ((e.key === 'z' || e.key === 'Z') && !e.ctrlKey && !e.metaKey) {
                     undoLastLap();
                 }
+                if (e.key === 'p' || e.key === 'P') {
+                    nextPilot();
+                }
             });
 
             document.querySelectorAll('button, .circle-btn').forEach(el => {
@@ -2445,6 +2613,18 @@
                         raceModeSelect.value = m;
                         saveRaceMode();
                         updateDisplays();
+                    }
+                },
+                getTeamCount: () => teamCount,
+                getCurrentPilot: () => currentPilot,
+                nextPilot: nextPilot,
+                setTeamCount: (n) => {
+                    if (typeof n === 'number' && n >= 1 && n <= 8) {
+                        teamCount = n;
+                        teamCountSelect.value = String(n);
+                        currentPilot = 0;
+                        localStorage.setItem('mqdr_team_count', String(n));
+                        renderTeamPanel();
                     }
                 },
                 getTimeMode: () => timeMode,

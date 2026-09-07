@@ -30,8 +30,10 @@ Vanilla HTML/CSS/JS, **без сборки, без фреймворков, бе�
   4. `mainApp` — вся логика: настройки, голос (Web Speech), звук (Web Audio), таймер,
      режимы старта `first lap` / `hole shot` (`raceMode` + `waitingFirstCrossing`,
      запуск таймера по первому пересечению — `startTiming()`),
-     геймпад (Gamepad API, опрос в `pollGamepad`), клавиатура (Space/Enter — круг/старт, S — стоп, R — сброс, Z — отмена действия с кругами),
-     история кругов `lapHistory` + `undoLastLap()` (отмена добавления/удаления)
+     геймпад (Gamepad API, опрос в `pollGamepad`), клавиатура (Space/Enter — круг/старт, S — стоп, R — сброс, Z — отмена действия с кругами, P — следующий пилот),
+     история кругов `lapHistory` + `undoLastLap()` (отмена добавления/удаления),
+     командные гонки (`teamCount` 1–8, `currentPilot`, `lapPilots[]` параллелен `laps`,
+     панель чипов `renderTeamPanel()`, смена `switchPilot()/nextPilot()`)
 - В конце `mainApp` экспортирует отладочный хук `window.__laps` (доступ к состоянию и функциям из консоли)
 
 ## Ключевые правила
@@ -43,7 +45,7 @@ Vanilla HTML/CSS/JS, **без сборки, без фреймворков, бе�
 4. Минимальное время круга 1 с — защита от ложных срабатываний, не убирать.
 5. Ключи настроек в `localStorage` с префиксом `mqdr_` (`mqdr_voice_enabled`, `mqdr_volume`,
    `mqdr_display_format`, `mqdr_best_laps_count`, `mqdr_race_mode`, `mqdr_time_mode`,
-   `mqdr_timer_seconds`); ключ `laps_trainer_radiomaster` — легаси,
+   `mqdr_timer_seconds`, `mqdr_team_count`); ключ `laps_trainer_radiomaster` — легаси,
    сохранять совместимость при чтении/записи.
 6. Аудио- и речевые API требуют пользовательского жеста — не вызывать до первого взаимодействия.
 7. Вьюпорт зафиксирован (`user-scalable=no`, запрет double-tap zoom) — часть UX, не менять без причины.
