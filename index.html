@@ -1404,6 +1404,14 @@
             // 'timer' — обратный отсчёт от timerSeconds с автофинишем на нуле
             let timeMode = 'stopwatch';
             let timerSeconds = 120;
+            // Голосовые оповещения остатка таймера: за 1 мин, 30 с и 10 с до конца
+            const timeAnnounced = { m60: false, s30: false, s10: false };
+
+            function resetTimeAnnouncements() {
+                timeAnnounced.m60 = false;
+                timeAnnounced.s30 = false;
+                timeAnnounced.s10 = false;
+            }
 
             // Командные гонки: круги приписываются текущему пилоту
             let teamCount = 1;      // 1 = одиночная гонка (командный режим выкл)
@@ -2042,6 +2050,22 @@
                 const delta = timestamp - lastTimestamp;
                 lastTimestamp = timestamp;
                 totalElapsed += delta;
+
+                // Голосовые оповещения остатка таймера (1 мин / 30 с / 10 с)
+                if (timeMode === 'timer' && !waitingFirstCrossing) {
+                    const remainingMs = timerSeconds * 1000 - totalElapsed;
+                    if (totalElapsed > 1000 && remainingMs < 10000 && timerSeconds >= 10 && !timeAnnounced.s10) {
+                        timeAnnounced.s10 = true;
+                        speak('Осталось 10 секунд');
+                    } else if (totalElapsed > 1000 && remainingMs < 30000 && timerSeconds >= 30 && !timeAnnounced.s30) {
+                        timeAnnounced.s30 = true;
+                        speak('Осталось 30 секунд');
+                    } else if (totalElapsed > 1000 && remainingMs < 60000 && timerSeconds >= 60 && !timeAnnounced.m60) {
+                        timeAnnounced.m60 = true;
+                        speak('Осталась минута');
+                    }
+                }
+
                 // Таймер: лимит исчерпан — автофиниш
                 if (timeMode === 'timer' && totalElapsed >= timerSeconds * 1000) {
                     totalElapsed = timerSeconds * 1000;
@@ -2108,6 +2132,7 @@
                 lapHistory.length = 0;
                 lapStartTime = 0;
                 currentPilot = 0;
+                resetTimeAnnouncements();
                 updateDisplays();
 
                 isCountdown = true;
@@ -2232,6 +2257,7 @@
                 lapHistory.length = 0;
                 lapStartTime = 0;
                 currentPilot = 0;
+                resetTimeAnnouncements();
                 renderTeamPanel();
                 updateDisplays();
                 if (navigator.vibrate) navigator.vibrate(20);

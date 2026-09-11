@@ -5,7 +5,7 @@
  *   - Остальные GET (иконки, манифест): cache-first
  * ============================================================ */
 
-const CACHE_NAME = 'mqdr-cache-v11';
+const CACHE_NAME = 'mqdr-cache-v12';
 
 const APP_SHELL = [
   './',
